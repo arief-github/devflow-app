@@ -17,11 +17,18 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Editor } from "@tinymce/tinymce-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Badge } from "../ui/badge";
 
-const QuestionForm = () => {
+type QuestionFormType = "create" | "edit";
+
+type QuestionFormProps = {
+  mode?: QuestionFormType;
+};
+
+const QuestionForm = ({ mode = "create" }: QuestionFormProps) => {
   const editorRef = useRef(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof QuestionformSchema>>({
     resolver: zodResolver(QuestionformSchema),
@@ -32,8 +39,20 @@ const QuestionForm = () => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof QuestionformSchema>) {
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof QuestionformSchema>) {
+    setIsSubmitting(true);
+
+    try {
+      console.log(values);
+      // make an async call to your API -> create a question
+      // contain all form data
+
+      // navigate to home page
+    } catch (error) {
+      console.error("Error submitting question:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   const handleInputKeyDown = (
@@ -211,7 +230,17 @@ const QuestionForm = () => {
             )}
           />
 
-          <Button type="submit">Submit</Button>
+          <Button
+            type="submit"
+            className="primary-gradient w-fit text-light-900!"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>{mode === "edit" ? "Editing..." : "Posting..."}</>
+            ) : (
+              <>{mode === "edit" ? "Edit Question" : "Ask a Question"}</>
+            )}
+          </Button>
         </form>
       </Form>
     </div>
