@@ -14,7 +14,7 @@ const Homepage = () => {
         <h1 className="h1-bold text-dark100_light900">All Questions</h1>
 
         <Link href="/ask-question" className="flex justify-end max-sm:w-full">
-          <Button className="primary-gradient min-h-[46px] rounded-xl px-4 py-3 font-inter text-light900!">
+          <Button className="primary-gradient min-h-11.5 rounded-xl px-4 py-3 font-inter text-light900!">
             Ask a Question
           </Button>
         </Link>

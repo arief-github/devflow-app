@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Editor } from "@tinymce/tinymce-react";
 import { useRef, useState } from "react";
 import { Badge } from "../ui/badge";
+import { createQuestion } from "@/lib/actions/question.action";
 
 type QuestionFormType = "create" | "edit";
 
@@ -46,6 +47,7 @@ const QuestionForm = ({ mode = "create" }: QuestionFormProps) => {
       console.log(values);
       // make an async call to your API -> create a question
       // contain all form data
+      await createQuestion({ params: "" });
 
       // navigate to home page
     } catch (error) {
