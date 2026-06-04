@@ -2,11 +2,13 @@
   "name": "devflow-app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "bunx eslint ."
+    "lint": "bunx eslint .",
+    "db:seed": "npx ts-node --project tsconfig.json scripts/seed.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.3.3",
@@ -37,6 +39,7 @@
     "eslint-config-prettier": "^10.1.8",
     "tailwindcss": "^4.1.7",
     "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.22.3",
     "typescript": "^5"
   },
   "ignoreScripts": [

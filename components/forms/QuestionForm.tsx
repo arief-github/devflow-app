@@ -20,16 +20,20 @@ import { Editor } from "@tinymce/tinymce-react";
 import { useRef, useState } from "react";
 import { Badge } from "../ui/badge";
 import { createQuestion } from "@/lib/actions/question.action";
+import { usePathname, useRouter } from "next/navigation";
 
 type QuestionFormType = "create" | "edit";
 
 type QuestionFormProps = {
   mode?: QuestionFormType;
+  mongoUserId: string;
 };
 
-const QuestionForm = ({ mode = "create" }: QuestionFormProps) => {
+const QuestionForm = ({ mode = "create", mongoUserId }: QuestionFormProps) => {
   const editorRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
   const form = useForm<z.infer<typeof QuestionformSchema>>({
     resolver: zodResolver(QuestionformSchema),
@@ -47,9 +51,16 @@ const QuestionForm = ({ mode = "create" }: QuestionFormProps) => {
       console.log(values);
       // make an async call to your API -> create a question
       // contain all form data
-      await createQuestion({ params: "" });
+      await createQuestion({
+        title: values.title,
+        content: values.explanation,
+        tags: values.tags,
+        author: mongoUserId, // why it's got nulled ?
+        path: pathname,
+      });
 
       // navigate to home page
+      router.push("/");
     } catch (error) {
       console.error("Error submitting question:", error);
     } finally {
