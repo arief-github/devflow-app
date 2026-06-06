@@ -1,3 +1,5 @@
+"use client";
+
 import { HomePageFilters } from "@/constants/filter";
 import { Button } from "../ui/button";
 
