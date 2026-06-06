@@ -12,15 +12,15 @@ const RightSidebar = () => {
   ];
 
   const popularTags: Array<{
-    _id: number;
+    _id: string;
     name: string;
     totalQuestion: number;
   }> = [
-    { _id: 1, name: "NextJS", totalQuestion: 10 },
-    { _id: 2, name: "React", totalQuestion: 20 },
-    { _id: 3, name: "TypeScript", totalQuestion: 30 },
-    { _id: 4, name: "PostgreSQL", totalQuestion: 40 },
-    { _id: 5, name: "Stripe", totalQuestion: 50 },
+    { _id: "1", name: "NextJS", totalQuestion: 10 },
+    { _id: "2", name: "React", totalQuestion: 20 },
+    { _id: "3", name: "TypeScript", totalQuestion: 30 },
+    { _id: "4", name: "PostgreSQL", totalQuestion: 40 },
+    { _id: "5", name: "Stripe", totalQuestion: 50 },
   ];
 
   return (
@@ -28,9 +28,10 @@ const RightSidebar = () => {
       <div>
         <h3 className="h3-bold text-dark200_light900">Top Question</h3>
       </div>
-      <div className="mt-7 flex w-full flex-col gap-[30px]">
+      <div className="mt-7 flex w-full flex-col gap-7.5">
         {hotQuestions.map((question) => (
           <Link
+            key={question._id}
             className="flex cursor-pointer items-center justify-between gap-7"
             href={`/questions/${question._id}`}
           >
