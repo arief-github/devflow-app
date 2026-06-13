@@ -84,3 +84,16 @@ export async function deleteUser(params: DeleteUserParams) {
     throw error;
   }
 }
+
+export async function getAllUsers() {
+  try {
+    connectToDatabase();
+
+    const users = await User.find({}).sort({ createdAt: -1 });
+
+    return { users };
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw error;
+  }
+}
