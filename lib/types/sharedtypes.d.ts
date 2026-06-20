@@ -1,6 +1,23 @@
 import { Schema } from "mongoose";
-
+import { Document } from "mongoose";
 import { IUser } from "@/mongodb";
+import { IQuestion } from "@/database/question.model";
+
+// Shared types for detail page
+export interface IQuestionDetail extends Omit<
+  IQuestion,
+  keyof Document | "tags" | "author"
+> {
+  title: string;
+  tags: Array<{ _id: string; name: string }>;
+  author: {
+    _id: string;
+    clerkId: string;
+    name: string;
+    picture: string;
+  };
+  answers: Array<{ _id: string }>;
+}
 
 export interface CreateAnswerParams {
   content: string;

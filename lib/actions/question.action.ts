@@ -2,7 +2,12 @@
 
 import Question from "@/database/question.model";
 import { connectToDatabase } from "../mongoose";
-import { CreateQuestionParams, GetQuestionsParams } from "../types/sharedtypes";
+import {
+  CreateQuestionParams,
+  GetQuestionsParams,
+  GetQuestionByIdParams,
+  IQuestionDetail,
+} from "../types/sharedtypes";
 import Tag from "@/database/tag.model";
 import { revalidatePath } from "next/cache";
 import User from "@/database/user.model";
@@ -18,6 +23,30 @@ export async function getQuestions(params: GetQuestionsParams) {
 
     return { questions };
   } catch (error) {
+    throw error;
+  }
+}
+
+export async function getQuestionById(
+  params: GetQuestionByIdParams,
+): Promise<{ question: IQuestionDetail | null }> {
+  try {
+    connectToDatabase();
+
+    const { questionId } = params;
+
+    const question = await Question.findById(questionId)
+      .populate({ path: "tags", model: Tag, select: "_id name" })
+      .populate({
+        path: "author",
+        model: User,
+        select: "_id clerkId name picture",
+      })
+      .lean<IQuestionDetail>();
+
+    return { question };
+  } catch (error) {
+    console.error("Error fetching question by ID:", error);
     throw error;
   }
 }
