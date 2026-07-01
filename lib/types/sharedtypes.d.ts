@@ -2,21 +2,35 @@ import { Schema } from "mongoose";
 import { Document } from "mongoose";
 import { IUser } from "@/mongodb";
 import { IQuestion } from "@/database/question.model";
+import { IAnswer } from "@/database/answer.model";
 
 // Shared types for detail page
+
+// author detail interface can stick with question or answer
+interface AuthorDetail {
+  _id: string;
+  clerkId: string;
+  name: string;
+  picture: string;
+}
+
 export interface IQuestionDetail extends Omit<
   IQuestion,
   keyof Document | "tags" | "author"
 > {
+  _id: string;
   title: string;
   tags: Array<{ _id: string; name: string }>;
-  author: {
-    _id: string;
-    clerkId: string;
-    name: string;
-    picture: string;
-  };
+  author: AuthorDetail;
   answers: Array<{ _id: string }>;
+}
+
+export interface IAnswerDetail extends Omit<
+  IAnswer,
+  keyof Document | "author"
+> {
+  _id: string;
+  author: AuthorDetail;
 }
 
 export interface CreateAnswerParams {

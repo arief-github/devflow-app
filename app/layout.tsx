@@ -41,6 +41,7 @@ export default function RootLayout({
       className={cn("font-sans", geist.variable)}
     >
       <body
+        suppressHydrationWarning
         className={`${inter.variable} ${spaceGrotesk.variable} antialiased`}
       >
         {/* Clerk */}

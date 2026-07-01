@@ -6,9 +6,18 @@ import Metric from "@/components/shared/Metric";
 import { formatAndDivideNumber, getTimestamp } from "@/lib/utils";
 import ParseHTML from "@/components/shared/ParseHTML";
 import RenderTag from "@/components/shared/RenderTag";
+import { auth } from "@clerk/nextjs/server";
+import { getUserById } from "@/lib/actions/user.action";
+import AnswerForm from "@/components/forms/AnswerForm";
+import AnswerList from "@/components/shared/AnswerList";
 
 const DetailQuestionPage = async ({ params }: { params: { id: string } }) => {
   const { id } = await params;
+  const authObject = await auth();
+
+  const mongoUser = !authObject.userId
+    ? null
+    : await getUserById({ userId: authObject.userId });
 
   const { question } = await getQuestionById({ questionId: id });
 
@@ -85,6 +94,20 @@ const DetailQuestionPage = async ({ params }: { params: { id: string } }) => {
           />
         ))}
       </div>
+
+      {/* Show All Previous Answer */}
+      <AnswerList
+        questionId={question._id}
+        userId={JSON.stringify(mongoUser?._id) || ""}
+        totalAnswers={question.answers.length}
+      />
+
+      {/* Show Form Input for Answer */}
+      <AnswerForm
+        questionId={JSON.stringify(question._id)}
+        question={question.content}
+        authorId={JSON.stringify(mongoUser?._id) || ""}
+      />
     </>
   );
 };
