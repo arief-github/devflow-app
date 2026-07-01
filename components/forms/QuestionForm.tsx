@@ -16,7 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Editor } from "@tinymce/tinymce-react";
+import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
 import { Badge } from "../ui/badge";
 import { createQuestion } from "@/lib/actions/question.action";
@@ -28,6 +28,16 @@ type QuestionFormProps = {
   mode?: QuestionFormType;
   mongoUserId: string;
 };
+
+const Editor = dynamic(
+  () => import("@tinymce/tinymce-react").then((mod) => mod.Editor),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full animate-pulse rounded-md bg-light-700 dark:bg-dark-300" style={{ height: 350 }} />
+    ),
+  },
+);
 
 const QuestionForm = ({ mode = "create", mongoUserId }: QuestionFormProps) => {
   const editorRef = useRef(null);
@@ -125,7 +135,7 @@ const QuestionForm = ({ mode = "create", mongoUserId }: QuestionFormProps) => {
                 </FormLabel>
                 <FormControl className="mt-3.5">
                   <Input
-                    className="no-focus paragraph-regular background-light900_dark300! light-border-2 text-dark300_light700 min-h-[56px] border"
+                    className="no-focus paragraph-regular background-light900_dark300! light-border-2 text-dark300_light700 min-h-14 border"
                     placeholder="Input your title"
                     {...field}
                   />
@@ -208,7 +218,7 @@ const QuestionForm = ({ mode = "create", mongoUserId }: QuestionFormProps) => {
                 <FormControl className="mt-3.5">
                   <>
                     <Input
-                      className="no-focus paragraph-regular background-light900_dark300! light-border-2 text-dark300_light700 min-h-[56px] border"
+                      className="no-focus paragraph-regular background-light900_dark300! light-border-2 text-dark300_light700 min-h-14 border"
                       placeholder="Add Tags..."
                       onKeyDown={(e) => handleInputKeyDown(e, field)}
                     />
