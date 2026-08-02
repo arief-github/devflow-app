@@ -7,6 +7,7 @@ import {
   GetQuestionsParams,
   GetQuestionByIdParams,
   IQuestionDetail,
+  QuestionVoteParams,
 } from "../types/sharedtypes";
 import Tag from "@/database/tag.model";
 import { revalidatePath } from "next/cache";
@@ -86,4 +87,59 @@ export async function createQuestion(params: CreateQuestionParams) {
     console.error("Error connecting to database:", error);
     throw new Error("Failed to connect to database");
   }
+}
+
+type VoteType = "upvote" | "downvote";
+
+export async function voteQuestion(
+  params: QuestionVoteParams,
+  voteType: VoteType,
+) {
+  try {
+    connectToDatabase();
+
+    const { questionId, userId, hasupVoted, hasdownVoted, path } = params;
+
+    const isUpvote = voteType === "upvote";
+
+    const targetField = isUpvote ? "upvotes" : "downvotes";
+    const oppositeField = isUpvote ? "downvotes" : "upvotes";
+
+    const hasVotedOnTarget = isUpvote ? hasupVoted : hasdownVoted;
+    const hasVotedOnOpposite = isUpvote ? hasdownVoted : hasupVoted;
+
+    let updateQuery = {};
+
+    if (hasVotedOnTarget) {
+      updateQuery = { $pull: { [targetField]: userId } };
+    } else if (hasVotedOnOpposite) {
+      updateQuery = {
+        $pull: { [oppositeField]: userId },
+        $push: { [targetField]: userId },
+      };
+    } else {
+      updateQuery = { $addToSet: { [targetField]: userId } };
+    }
+
+    const question = await Question.findByIdAndUpdate(questionId, updateQuery, {
+      new: true,
+    });
+
+    if (!question) {
+      throw new Error("Question not found");
+    }
+
+    revalidatePath(path);
+  } catch (error) {
+    console.error(`Error occurred while ${voteType}ing question:`, error);
+    throw error;
+  }
+}
+
+export async function upvoteQuestion(params: QuestionVoteParams) {
+  return voteQuestion(params, "upvote");
+}
+
+export async function downvoteQuestion(params: QuestionVoteParams) {
+  return voteQuestion(params, "downvote");
 }
