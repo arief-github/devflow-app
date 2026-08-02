@@ -9,7 +9,7 @@ import QuestionCard from "@/components/shared/QuestionCard";
 import NoResult from "@/components/shared/NoResult";
 
 const Homepage = async () => {
-  const result = await getQuestions({});
+  const result = await getQuestions();
 
   console.log("Result Question => ", result);
 
