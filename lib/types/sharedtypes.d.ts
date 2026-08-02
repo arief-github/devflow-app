@@ -189,3 +189,5 @@ export interface GetUserStatsParams {
 export interface DeleteUserParams {
   clerkId: string;
 }
+
+export type VoteType = "upvote" | "downvote";
