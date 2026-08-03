@@ -10,6 +10,7 @@ import {
 } from "../types/sharedtypes";
 import Question from "@/database/question.model";
 import { revalidatePath } from "next/cache";
+import { voteFunction } from "../helpers/vote";
 
 export async function createAnswer(params: CreateAnswerParams) {
   try {
@@ -54,70 +55,35 @@ export async function getAnswers(
   }
 }
 
-export async function upvoteAnswer(params: AnswerVoteParams) {
+export async function voteAnswer(
+  params: AnswerVoteParams,
+  voteType: "upvote" | "downvote",
+) {
   try {
     connectToDatabase();
 
     const { answerId, userId, hasupVoted, hasdownVoted, path } = params;
 
-    let updateQuery = {};
-
-    if (hasupVoted) {
-      updateQuery = { $pull: { upvotes: userId } };
-    } else if (hasdownVoted) {
-      updateQuery = {
-        $pull: { downvotes: userId },
-        $push: { upvotes: userId },
-      };
-    } else {
-      updateQuery = { $addToSet: { upvotes: userId } };
-    }
-
-    const answer = await Answer.findByIdAndUpdate(answerId, updateQuery, {
-      new: true,
+    await voteFunction({
+      model: Answer,
+      id: answerId,
+      userId,
+      hasupVoted,
+      hasdownVoted,
+      voteType,
+      path,
+      entityName: "Answer",
     });
-
-    if (!answer) {
-      throw new Error("Answer not found");
-    }
-
-    revalidatePath(path);
   } catch (error) {
-    console.log(error);
+    console.error(`Error occurred while ${voteType}ing answer:`, error);
     throw error;
   }
 }
 
+export async function upvoteAnswer(params: AnswerVoteParams) {
+  return voteAnswer(params, "upvote");
+}
+
 export async function downvoteAnswer(params: AnswerVoteParams) {
-  try {
-    connectToDatabase();
-
-    const { answerId, userId, hasupVoted, hasdownVoted, path } = params;
-
-    let updateQuery = {};
-
-    if (hasdownVoted) {
-      updateQuery = { $pull: { downvote: userId } };
-    } else if (hasupVoted) {
-      updateQuery = {
-        $pull: { upvotes: userId },
-        $push: { downvotes: userId },
-      };
-    } else {
-      updateQuery = { $addToSet: { downvotes: userId } };
-    }
-
-    const answer = await Answer.findByIdAndUpdate(answerId, updateQuery, {
-      new: true,
-    });
-
-    if (!answer) {
-      throw new Error("Answer not found");
-    }
-
-    revalidatePath(path);
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return voteAnswer(params, "downvote");
 }

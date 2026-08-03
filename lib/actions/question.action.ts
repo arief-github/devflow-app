@@ -4,16 +4,17 @@ import Question from "@/database/question.model";
 import { connectToDatabase } from "../mongoose";
 import {
   CreateQuestionParams,
-  GetQuestionsParams,
   GetQuestionByIdParams,
   IQuestionDetail,
   QuestionVoteParams,
+  VoteType,
 } from "../types/sharedtypes";
 import Tag from "@/database/tag.model";
 import { revalidatePath } from "next/cache";
 import User from "@/database/user.model";
+import { voteFunction } from "../helpers/vote";
 
-export async function getQuestions(params: GetQuestionsParams) {
+export async function getQuestions() {
   try {
     connectToDatabase();
 
@@ -89,8 +90,6 @@ export async function createQuestion(params: CreateQuestionParams) {
   }
 }
 
-type VoteType = "upvote" | "downvote";
-
 export async function voteQuestion(
   params: QuestionVoteParams,
   voteType: VoteType,
@@ -100,36 +99,16 @@ export async function voteQuestion(
 
     const { questionId, userId, hasupVoted, hasdownVoted, path } = params;
 
-    const isUpvote = voteType === "upvote";
-
-    const targetField = isUpvote ? "upvotes" : "downvotes";
-    const oppositeField = isUpvote ? "downvotes" : "upvotes";
-
-    const hasVotedOnTarget = isUpvote ? hasupVoted : hasdownVoted;
-    const hasVotedOnOpposite = isUpvote ? hasdownVoted : hasupVoted;
-
-    let updateQuery = {};
-
-    if (hasVotedOnTarget) {
-      updateQuery = { $pull: { [targetField]: userId } };
-    } else if (hasVotedOnOpposite) {
-      updateQuery = {
-        $pull: { [oppositeField]: userId },
-        $push: { [targetField]: userId },
-      };
-    } else {
-      updateQuery = { $addToSet: { [targetField]: userId } };
-    }
-
-    const question = await Question.findByIdAndUpdate(questionId, updateQuery, {
-      new: true,
+    await voteFunction({
+      model: Question,
+      id: questionId,
+      userId,
+      hasupVoted,
+      hasdownVoted,
+      voteType,
+      path,
+      entityName: "Question",
     });
-
-    if (!question) {
-      throw new Error("Question not found");
-    }
-
-    revalidatePath(path);
   } catch (error) {
     console.error(`Error occurred while ${voteType}ing question:`, error);
     throw error;
