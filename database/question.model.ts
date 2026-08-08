@@ -6,7 +6,7 @@ export interface IQuestion extends Document {
   content: string;
   tags: Schema.Types.ObjectId[];
   views: number;
-  upvotes: Schema.Types.ObjectId[];
+  upvotes: Schema.Types.ObjectId[] | string[];
   downvotes: Schema.Types.ObjectId[];
   author: Schema.Types.ObjectId;
   answers: Schema.Types.ObjectId[];

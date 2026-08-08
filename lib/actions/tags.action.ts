@@ -2,9 +2,14 @@
 
 import User from "@/database/user.model";
 import { connectToDatabase } from "../mongoose";
+import { QueryFilter } from "mongoose";
 
-import Tag from "@/database/tag.model";
-import { GetTopInteractedTagsParams } from "../types/sharedtypes";
+import Tag, { ITag } from "@/database/tag.model";
+import {
+  GetQuestionsByTagIdParams,
+  GetTopInteractedTagsParams,
+} from "../types/sharedtypes";
+import Question from "@/database/question.model";
 
 export async function getTopInteractedTags(params: GetTopInteractedTagsParams) {
   try {
@@ -36,6 +41,44 @@ export async function getAllTags() {
     const tags = await Tag.find({});
 
     return { tags };
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+export async function getQuestionsByTagId(params: GetQuestionsByTagIdParams) {
+  try {
+    connectToDatabase();
+
+    const { tagId, searchQuery } = params;
+
+    const tagFilter: QueryFilter<ITag> = { _id: tagId };
+
+    const tag = await Tag.findOne(tagFilter).populate({
+      path: "questions",
+      model: Question,
+      match: searchQuery
+        ? { title: { $regex: searchQuery, $options: "i" } }
+        : {},
+      options: {
+        sort: { createdAt: -1 },
+      },
+      populate: [
+        { path: "tags", model: Tag, select: "_id name" },
+        { path: "author", model: User, select: "_id clerkId name picture" },
+      ],
+    });
+
+    if (!tag) {
+      throw new Error("Tag not found");
+    }
+
+    // Convert Mongoose documents (with ObjectId) to plain JSON objects
+    // so the frontend receives string IDs and populated subdocuments.
+    const questions = tag.questions;
+
+    return { tagTitle: tag.name, questions };
   } catch (error) {
     console.error(error);
     throw error;
