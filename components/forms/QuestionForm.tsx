@@ -27,6 +27,7 @@ type QuestionFormType = "create" | "edit";
 type QuestionFormProps = {
   mode?: QuestionFormType;
   mongoUserId: string;
+  tagSuggestions?: Array<{ _id: string; name: string }>;
 };
 
 const Editor = dynamic(
@@ -34,12 +35,19 @@ const Editor = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full animate-pulse rounded-md bg-light-700 dark:bg-dark-300" style={{ height: 350 }} />
+      <div
+        className="w-full animate-pulse rounded-md bg-light-700 dark:bg-dark-300"
+        style={{ height: 350 }}
+      />
     ),
   },
 );
 
-const QuestionForm = ({ mode = "create", mongoUserId }: QuestionFormProps) => {
+const QuestionForm = ({
+  mode = "create",
+  mongoUserId,
+  tagSuggestions,
+}: QuestionFormProps) => {
   const editorRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
@@ -217,9 +225,16 @@ const QuestionForm = ({ mode = "create", mongoUserId }: QuestionFormProps) => {
                 </FormLabel>
                 <FormControl className="mt-3.5">
                   <>
+                    <datalist id="tag-suggestions">
+                      {tagSuggestions?.map((tag) => (
+                        <option key={tag._id} value={tag.name} />
+                      ))}
+                    </datalist>
+
                     <Input
                       className="no-focus paragraph-regular background-light900_dark300! light-border-2 text-dark300_light700 min-h-14 border"
                       placeholder="Add Tags..."
+                      list="tag-suggestions"
                       onKeyDown={(e) => handleInputKeyDown(e, field)}
                     />
                     {field.value.length > 0 && (
