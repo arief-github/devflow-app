@@ -11,8 +11,6 @@ import NoResult from "@/components/shared/NoResult";
 const Homepage = async () => {
   const result = await getQuestions();
 
-  console.log("Result Question => ", result);
-
   return (
     <>
       <div className="flex w-full flex-col-reverse items-start justify-between gap-4 sm:flex-row sm:items-center sm:gap-0">

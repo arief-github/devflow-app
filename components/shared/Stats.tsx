@@ -1,0 +1,63 @@
+import { formatAndDivideNumber } from "@/lib/utils";
+import Image from "next/image";
+
+// Stats component
+interface Props {
+  totalQuestions: number;
+  totalAnswers: number;
+  badgesItems?: StatsCardProps[];
+}
+
+interface StatsCardProps {
+  imgUrl: string;
+  value: number;
+  title: string;
+}
+
+const Stats = ({ totalQuestions, totalAnswers, badgesItems }: Props) => {
+  return (
+    <div className="mt-10">
+      <h4 className="h3-semibold text-dark200_light900">Stats</h4>
+
+      <div className="mt-5 grid grid-cols-1 gap-5 xs:grid-cols-2 md:grid-cols-4">
+        <div className="light-border background-light900_dark300 flex flex-wrap items-center justify-evenly gap-4 rounded-md border p-6 shadow-light-300 dark:shadow-dark-200">
+          <div>
+            <p className="paragraph-semibold text-dark200_light900">
+              {formatAndDivideNumber(totalQuestions)}
+            </p>
+            <p className="body-medium text-dark400_light700">Questions</p>
+          </div>
+          <div>
+            <p className="paragraph-semibold text-dark200_light900">
+              {formatAndDivideNumber(totalAnswers)}
+            </p>
+            <p className="body-medium text-dark400_light700">Answers</p>
+          </div>
+        </div>
+
+        {badgesItems?.map((badge) => (
+          <StatsCard
+            key={badge.title}
+            imgUrl={badge.imgUrl}
+            value={badge.value}
+            title={badge.title}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const StatsCard = ({ imgUrl, value, title }: StatsCardProps) => {
+  return (
+    <div className="light-border background-light900_dark300 flex flex-wrap items-center justify-start gap-4 rounded-md border p-6 shadow-light-300 dark:shadow-dark-200">
+      <Image src={imgUrl} alt={title} width={40} height={50} />
+      <div>
+        <p className="paragraph-semibold text-dark200_light900">{value}</p>
+        <p className="body-medium text-dark400_light700">{title}</p>
+      </div>
+    </div>
+  );
+};
+
+export default Stats;
