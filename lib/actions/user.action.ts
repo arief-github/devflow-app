@@ -7,12 +7,14 @@ import {
   CreateUserParams,
   DeleteUserParams,
   GetSavedQuestionsParams,
+  GetUserStatsParams,
   ToggleSaveQuestionParams,
   UpdateUserParams,
 } from "../types/sharedtypes";
 import { revalidatePath } from "next/cache";
 import Question from "@/database/question.model";
 import Tag from "@/database/tag.model";
+import Answer from "@/database/answer.model";
 
 type GetUserByIdParams = {
   userId: string;
@@ -172,6 +174,96 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
     return { questions: savedQuestions };
   } catch (error) {
     console.error("Error fetching saved questions:", error);
+    throw error;
+  }
+}
+
+export async function getUserInfo(params: GetUserByIdParams) {
+  try {
+    connectToDatabase();
+
+    const { userId } = params;
+
+    const user = await User.findOne({ clerkId: userId });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const totalQuestion = await Question.countDocuments({ author: user._id });
+    const totalAnswers = await Answer.countDocuments({ author: user._id });
+
+    return { user, totalQuestion, totalAnswers };
+  } catch (error) {
+    console.error("Error fetching user info:", error);
+    throw error;
+  }
+}
+
+export async function getUserQuestions(params: GetUserStatsParams) {
+  try {
+    connectToDatabase();
+
+    const { userId, page = 1, pageSize = 10 } = params;
+
+    // Normalize userId: it may be a Mongo ObjectId string or a Clerk `clerkId`.
+    let authorId = userId;
+    const mongoose = await import("mongoose");
+    if (!mongoose.Types.ObjectId.isValid(authorId)) {
+      const user = await User.findOne({ clerkId: authorId });
+      if (!user) {
+        throw new Error("User not found");
+      }
+      authorId = String(user._id);
+    }
+
+    const totalQuestions = await Question.countDocuments({ author: authorId });
+
+    const userQuestions = await Question.find({ author: authorId })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "tags",
+        select: "_id name",
+      })
+      .populate({
+        path: "author",
+        select: "_id clerkId name picture",
+      });
+
+    return { questions: userQuestions, totalQuestions };
+  } catch (error) {
+    console.error("Error fetching user questions:", error);
+    throw error;
+  }
+}
+
+export async function getUserAnswers(params: GetUserStatsParams) {
+  try {
+    connectToDatabase();
+
+    const { userId, page = 1, pageSize = 10 } = params;
+
+    // Normalize userId to Mongo ObjectId string when a clerkId is passed
+    let authorId = userId;
+    const mongoose = await import("mongoose");
+    if (!mongoose.Types.ObjectId.isValid(authorId)) {
+      const user = await User.findOne({ clerkId: authorId });
+      if (!user) {
+        throw new Error("User not found");
+      }
+      authorId = String(user._id);
+    }
+
+    const totalAnswers = await Answer.countDocuments({ author: authorId });
+
+    const userAnswers = await Answer.find({ author: authorId })
+      .sort({ upvotes: -1 })
+      .populate("question", "_id title")
+      .populate("author", "_id clerkId name picture");
+
+    return { answers: userAnswers, totalAnswers };
+  } catch (error) {
+    console.error("Error fetching user answers:", error);
     throw error;
   }
 }
