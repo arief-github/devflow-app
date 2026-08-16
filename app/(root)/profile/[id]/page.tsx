@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { getJoinedDate } from "@/lib/utils";
 import ProfileLink from "@/components/shared/ProfileLink";
 import Stats from "@/components/shared/Stats";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProfileTab } from "@/components/profile/ProfileTab";
 
 interface StatsCardProps {
   imgUrl: string;
@@ -33,7 +35,7 @@ const StatsCardItems: StatsCardProps[] = [
   },
 ];
 
-const Page = async ({ params }: URLProps) => {
+const Page = async ({ params, searchParams }: URLProps) => {
   const { id } = await params;
   const authObject = await auth();
   const clerkId = authObject.userId;
@@ -104,6 +106,35 @@ const Page = async ({ params }: URLProps) => {
         totalAnswers={userInfo.totalAnswers}
         badgesItems={StatsCardItems}
       />
+
+      <div className="mt-10 flex gap-10">
+        <Tabs defaultValue="top-posts" className="flex-1">
+          <TabsList className="background-light800_dark400 min-h-10.5 p-1">
+            <TabsTrigger value="top-posts" className="tab">
+              Top Posts
+            </TabsTrigger>
+            <TabsTrigger value="answers" className="tab">
+              Answers
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="top-posts">
+            <ProfileTab
+              searchParams={searchParams}
+              userId={id}
+              clerkId={clerkId}
+              type="question"
+            />
+          </TabsContent>
+          <TabsContent value="answers">
+            <ProfileTab
+              searchParams={searchParams}
+              userId={id}
+              clerkId={clerkId}
+              type="answer"
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
     </>
   );
 };
