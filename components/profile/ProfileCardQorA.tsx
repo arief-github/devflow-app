@@ -7,6 +7,7 @@ import {
 import { formatAndDivideNumber, getTimestamp } from "@/lib/utils";
 import Metric from "../shared/Metric";
 import RenderTag from "../shared/RenderTag";
+import EditDeleteAction from "../shared/EditDeleteAction";
 
 const ProfileCardQorA = (props: ProfileCardQorAProps) => {
   if (props.type === "question") {
@@ -19,7 +20,7 @@ const ProfileCardQorA = (props: ProfileCardQorAProps) => {
 };
 
 const AnswerCard = (props: AnswerCardProps) => {
-  const { _id, question, author, upvotes, createdAt } = props;
+  const { _id, question, author, upvotes, createdAt, clerkId } = props;
 
   return (
     <Link
@@ -35,6 +36,12 @@ const AnswerCard = (props: AnswerCardProps) => {
             {question.title}
           </h3>
         </div>
+
+        <EditDeleteAction
+          type="answer"
+          itemId={JSON.stringify(_id)}
+          authClerkId={author.clerkId}
+        />
       </div>
 
       <div className="flex-between mt-6 w-full flex-wrap gap-3">
@@ -63,9 +70,17 @@ const AnswerCard = (props: AnswerCardProps) => {
 };
 
 const QuestionCard = (props: QuestionCardProps) => {
-  const { _id, title, tags, author, upvotes, views, answers, createdAt } =
-    props;
-
+  const {
+    _id,
+    title,
+    tags,
+    author,
+    upvotes,
+    views,
+    answers,
+    clerkId,
+    createdAt,
+  } = props;
   return (
     <div className="card-wrapper rounded-[10px] p-9 sm:px-11">
       <div className="flex flex-col-reverse items-start justify-between gap-5 sm:flex-row">
@@ -81,6 +96,11 @@ const QuestionCard = (props: QuestionCardProps) => {
         </div>
 
         {/* If signed in add edit delete actions */}
+        <EditDeleteAction
+          type="answer"
+          itemId={JSON.stringify(_id)}
+          authClerkId={author.clerkId}
+        />
       </div>
 
       <div className="mt-3.5 flex flex-wrap gap-2">

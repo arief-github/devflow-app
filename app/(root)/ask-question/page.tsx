@@ -9,15 +9,19 @@ const AskQuestionpage = async () => {
   const { tags } = await getAllTags();
 
   if (!authObject.userId) redirect("/sign-in");
-
   const mongoUser = await getUserById({ userId: authObject.userId });
+
+  if (!mongoUser) redirect("/sign-in");
 
   return (
     <div>
       <h1 className="h1-bold text-dark100_light900">Ask a Question</h1>
 
       <div className="mt-9">
-        <QuestionForm mongoUserId={mongoUser} tagSuggestions={tags} />
+        <QuestionForm
+          mongoUserId={String(mongoUser._id)}
+          tagSuggestions={tags}
+        />
       </div>
     </div>
   );
