@@ -97,7 +97,7 @@ const QuestionCard = (props: QuestionCardProps) => {
 
         {/* If signed in add edit delete actions */}
         <EditDeleteAction
-          type="answer"
+          type="question"
           itemId={JSON.stringify(_id)}
           authClerkId={author.clerkId}
         />

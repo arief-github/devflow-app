@@ -45,7 +45,7 @@ const EditDeleteAction = ({ type, itemId, authClerkId }: Props) => {
         />
       )}
       <Image
-        src="/icons/delete.svg"
+        src="/icons/trash.svg"
         alt="Delete"
         width={14}
         height={14}

@@ -5,14 +5,21 @@ import { ParamsProps } from "@/types";
 import { auth } from "@clerk/nextjs/server";
 
 const Page = async ({ params }: ParamsProps) => {
+  const { id } = await params;
+
   const authObject = await auth();
   if (!authObject.userId) return null;
 
   const mongoUser = await getUserById({ userId: authObject.userId });
   if (!mongoUser) return null;
 
-  const { question } = await getQuestionById({ questionId: params.id });
+  const { question } = await getQuestionById({ questionId: id });
   if (!question) return null;
+
+  const plainQuestion = JSON.parse(JSON.stringify(question));
+  const mongoUserId = mongoUser?._id ? String(mongoUser._id) : "";
+
+  console.log(plainQuestion);
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -22,11 +29,12 @@ const Page = async ({ params }: ParamsProps) => {
         <QuestionForm
           mode="edit"
           questionDetails={{
-            title: question.title,
-            explanation: question.content,
-            tags: question.tags || [],
+            _id: plainQuestion._id,
+            title: plainQuestion.title,
+            explanation: plainQuestion.content,
+            tags: plainQuestion.tags || [],
           }}
-          mongoUserId={String(mongoUser._id)}
+          mongoUserId={mongoUserId}
         />
       </div>
     </div>

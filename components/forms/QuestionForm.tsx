@@ -29,6 +29,7 @@ type QuestionFormProps = {
   mongoUserId: string;
   tagSuggestions?: Array<{ _id: string; name: string }>;
   questionDetails?: {
+    _id: string | null;
     title: string;
     explanation: string;
     tags: Array<{ _id: string; name: string }>;
@@ -59,9 +60,7 @@ const QuestionForm = ({
   const router = useRouter();
   const pathname = usePathname();
 
-  const parsedQuestionDetails = questionDetails
-    ? JSON.parse(questionDetails as unknown as string)
-    : null;
+  const parsedQuestionDetails = questionDetails ?? null;
 
   const groupedTags =
     parsedQuestionDetails?.tags.map((tag: { name: string }) => tag.name) || [];
@@ -81,7 +80,7 @@ const QuestionForm = ({
     try {
       if (mode === "edit") {
         await editQuestion({
-          questionId: parsedQuestionDetails._id,
+          questionId: parsedQuestionDetails?._id ?? "",
           title: values.title,
           content: values.explanation,
           path: pathname,
@@ -195,7 +194,7 @@ const QuestionForm = ({
                     }}
                     onBlur={field.onBlur}
                     onEditorChange={(content) => field.onChange(content)}
-                    initialValue=""
+                    initialValue={parsedQuestionDetails?.explanation || ""}
                     init={{
                       height: 350,
                       menubar: false,
