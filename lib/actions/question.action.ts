@@ -171,3 +171,17 @@ export async function editQuestion(params: EditQuestionParams) {
     throw new Error("Failed to edit question");
   }
 }
+
+export async function getHotQuestions() {
+  try {
+    connectToDatabase();
+
+    const hotQuestions = await Question.find({})
+      .sort({ views: -1, upvotes: -1 })
+      .limit(5);
+
+    return hotQuestions;
+  } catch (error) {
+    throw error;
+  }
+}
