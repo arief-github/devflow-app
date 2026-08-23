@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
 import { Badge } from "../ui/badge";
-import { createQuestion } from "@/lib/actions/question.action";
+import { createQuestion, editQuestion } from "@/lib/actions/question.action";
 import { usePathname, useRouter } from "next/navigation";
 
 type QuestionFormType = "create" | "edit";
@@ -28,6 +28,12 @@ type QuestionFormProps = {
   mode?: QuestionFormType;
   mongoUserId: string;
   tagSuggestions?: Array<{ _id: string; name: string }>;
+  questionDetails?: {
+    _id: string | null;
+    title: string;
+    explanation: string;
+    tags: Array<{ _id: string; name: string }>;
+  };
 };
 
 const Editor = dynamic(
@@ -47,18 +53,24 @@ const QuestionForm = ({
   mode = "create",
   mongoUserId,
   tagSuggestions,
+  questionDetails,
 }: QuestionFormProps) => {
   const editorRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
+  const parsedQuestionDetails = questionDetails ?? null;
+
+  const groupedTags =
+    parsedQuestionDetails?.tags.map((tag: { name: string }) => tag.name) || [];
+
   const form = useForm<z.infer<typeof QuestionformSchema>>({
     resolver: zodResolver(QuestionformSchema),
     defaultValues: {
-      title: "",
-      explanation: "",
-      tags: [],
+      title: parsedQuestionDetails?.title || "",
+      explanation: parsedQuestionDetails?.explanation || "",
+      tags: groupedTags || [],
     },
   });
 
@@ -66,16 +78,22 @@ const QuestionForm = ({
     setIsSubmitting(true);
 
     try {
-      console.log(values);
-      // make an async call to your API -> create a question
-      // contain all form data
-      await createQuestion({
-        title: values.title,
-        content: values.explanation,
-        tags: values.tags,
-        author: mongoUserId, // why it's got nulled ?
-        path: pathname,
-      });
+      if (mode === "edit") {
+        await editQuestion({
+          questionId: parsedQuestionDetails?._id ?? "",
+          title: values.title,
+          content: values.explanation,
+          path: pathname,
+        });
+      } else {
+        await createQuestion({
+          title: values.title,
+          content: values.explanation,
+          tags: values.tags,
+          author: mongoUserId, // why it's got nulled ?
+          path: pathname,
+        });
+      }
 
       // navigate to home page
       router.push("/");
@@ -176,7 +194,7 @@ const QuestionForm = ({
                     }}
                     onBlur={field.onBlur}
                     onEditorChange={(content) => field.onChange(content)}
-                    initialValue=""
+                    initialValue={parsedQuestionDetails?.explanation || ""}
                     init={{
                       height: 350,
                       menubar: false,
