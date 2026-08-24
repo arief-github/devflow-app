@@ -8,8 +8,14 @@ import { getQuestions } from "@/lib/actions/question.action";
 import QuestionCard from "@/components/shared/QuestionCard";
 import NoResult from "@/components/shared/NoResult";
 
-const Homepage = async () => {
-  const result = await getQuestions();
+import { SearchParamsProps } from "@/types";
+
+const Homepage = async ({ searchParams }: SearchParamsProps) => {
+  const { q } = await searchParams;
+
+  const result = await getQuestions({
+    searchQuery: q,
+  });
 
   return (
     <>
