@@ -6,7 +6,7 @@ import { getAllTags, TagListItem } from "@/lib/actions/tags.action";
 import { SearchParamsProps } from "@/types";
 
 const Page = async ({ searchParams }: SearchParamsProps) => {
-  const { q } = searchParams;
+  const { q } = await searchParams;
   const { tags } = await getAllTags({ searchQuery: q });
 
   return (
