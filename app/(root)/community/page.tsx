@@ -1,31 +1,14 @@
 import GenericCard from "@/components/shared/GenericCard";
 import Filter from "@/components/shared/Filter";
 import LocalSearchBar from "@/components/shared/LocalSearchBar";
-import User from "@/database/user.model";
-import { connectToDatabase } from "@/lib/mongoose";
 import Image from "next/image";
 import Link from "next/link";
+import { SearchParamsProps } from "@/types";
+import { getAllUsers, UserListItem } from "@/lib/actions/user.action";
 
-const Page = async () => {
-  let users: Record<string, unknown>[] = [];
-  let error = false;
-
-  try {
-    connectToDatabase();
-    const result = await User.find({}).sort({ joinedAt: -1 });
-    users = JSON.parse(JSON.stringify(result));
-  } catch (err) {
-    console.error("Error fetching users:", err);
-    error = true;
-  }
-
-  if (error) {
-    return (
-      <div className="paragraph-regular text-dark200_light800 mx-auto max-w-4xl text-center">
-        <p>Failed to load users</p>
-      </div>
-    );
-  }
+const Page = async ({ searchParams }: SearchParamsProps) => {
+  const { q } = await searchParams;
+  const { users } = await getAllUsers({ searchQuery: q });
 
   return (
     <>
@@ -41,47 +24,37 @@ const Page = async () => {
         <Filter filters={[]} otherClasses="min-h-[56px] sm:min-w-[170px]" />
       </div>
 
-      <GenericCard
+      <GenericCard<UserListItem>
         title="All Users"
-        items={
-          users as Array<{
-            _id: string;
-            picture: string;
-            name: string;
-            username: string;
-            bio?: string;
-            reputation?: number;
-          }>
-        }
+        items={users}
         getLinkHref={(user) => `/community/${user._id}`}
         renderCard={(user) => {
-          const userData = user as Record<string, unknown>;
           return (
             <div className="shadow-light100_darknone background-light900_dark200 light-border rounded-2xl border px-8 py-10">
               <div className="flex items-center gap-4">
                 <Image
-                  src={userData.picture as string}
-                  alt={userData.name as string}
+                  src={user.picture}
+                  alt={user.name}
                   width={48}
                   height={48}
                   className="rounded-full"
                 />
                 <div className="flex-1">
                   <p className="h3-semibold text-dark200_light900">
-                    {userData.name as string}
+                    {user.name}
                   </p>
                   <p className="body-regular text-dark400_light500">
-                    @{userData.username as string}
+                    @{user.username}
                   </p>
                 </div>
               </div>
-              {userData.bio ? (
+              {user.bio ? (
                 <p className="body-regular text-dark400_light500 mt-3">
-                  {userData.bio as string}
+                  {user.bio}
                 </p>
               ) : null}
               <p className="small-semibold text-dark300_light700 mt-3">
-                Reputation: {(userData.reputation ?? 0) as number}
+                Reputation: {user.reputation ?? 0}
               </p>
             </div>
           );
