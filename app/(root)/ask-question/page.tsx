@@ -6,7 +6,7 @@ import { getAllTags } from "@/lib/actions/tags.action";
 
 const AskQuestionpage = async () => {
   const authObject = await auth();
-  const { tags } = await getAllTags();
+  const { tags } = await getAllTags({});
 
   if (!authObject.userId) redirect("/sign-in");
   const mongoUser = await getUserById({ userId: authObject.userId });
