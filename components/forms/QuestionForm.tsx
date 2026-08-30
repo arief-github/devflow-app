@@ -90,7 +90,7 @@ const QuestionForm = ({
           title: values.title,
           content: values.explanation,
           tags: values.tags,
-          author: mongoUserId, // why it's got nulled ?
+          author: mongoUserId,
           path: pathname,
         });
       }
