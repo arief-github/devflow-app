@@ -6,10 +6,17 @@ import { QueryFilter } from "mongoose";
 
 import Tag, { ITag } from "@/database/tag.model";
 import {
+  GetAllTagsParams,
   GetQuestionsByTagIdParams,
   GetTopInteractedTagsParams,
 } from "../types/sharedtypes";
 import Question from "@/database/question.model";
+
+export type TagListItem = {
+  _id: string;
+  name: string;
+  questions: string[];
+};
 
 export async function getTopInteractedTags(params: GetTopInteractedTagsParams) {
   try {
@@ -34,13 +41,33 @@ export async function getTopInteractedTags(params: GetTopInteractedTagsParams) {
   }
 }
 
-export async function getAllTags() {
+export async function getAllTags(
+  params: GetAllTagsParams,
+): Promise<{ tags: TagListItem[] }> {
   try {
     connectToDatabase();
 
-    const tags = await Tag.find({});
+    const { searchQuery } = params;
 
-    return { tags };
+    const query: QueryFilter<typeof Tag> = {};
+
+    if (searchQuery) {
+      query.$or = [{ name: { $regex: new RegExp(searchQuery, "i") } }];
+    }
+
+    const tags = await Tag.find(query)
+      .select("_id name questions")
+      .lean<TagListItem[]>();
+
+    return {
+      tags: tags.map((tag) => ({
+        _id: String(tag._id),
+        name: tag.name,
+        questions: Array.isArray(tag.questions)
+          ? tag.questions.map(String)
+          : [],
+      })),
+    };
   } catch (error) {
     console.error(error);
     throw error;

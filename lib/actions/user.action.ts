@@ -6,6 +6,7 @@ import { QueryFilter } from "mongoose";
 import {
   CreateUserParams,
   DeleteUserParams,
+  GetAllUsersParams,
   GetSavedQuestionsParams,
   GetUserStatsParams,
   ToggleSaveQuestionParams,
@@ -91,11 +92,31 @@ export async function deleteUser(params: DeleteUserParams) {
   }
 }
 
-export async function getAllUsers() {
+export type UserListItem = {
+  _id: string;
+  picture: string;
+  name: string;
+  username: string;
+  bio?: string;
+  reputation?: number;
+};
+
+export async function getAllUsers(params: GetAllUsersParams) {
   try {
     connectToDatabase();
 
-    const users = await User.find({}).sort({ createdAt: -1 });
+    const { searchQuery } = params;
+
+    const query: QueryFilter<typeof User> = {};
+
+    if (searchQuery) {
+      query.$or = [
+        { name: { $regex: new RegExp(searchQuery, "i") } },
+        { username: { $regex: new RegExp(searchQuery, "i") } },
+      ];
+    }
+
+    const users = await User.find(query).sort({ createdAt: -1 });
 
     return { users };
   } catch (error) {
@@ -147,7 +168,7 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
   try {
     connectToDatabase();
 
-    const { clerkId, page = 1, pageSize = 10, searchQuery } = params;
+    const { clerkId, searchQuery } = params;
 
     const query: QueryFilter<typeof Question> = searchQuery
       ? { title: { $regex: new RegExp(searchQuery, "i") } }
