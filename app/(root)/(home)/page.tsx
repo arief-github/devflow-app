@@ -12,9 +12,11 @@ import { SearchParamsProps } from "@/types";
 
 const Homepage = async ({ searchParams }: SearchParamsProps) => {
   const { q } = await searchParams;
+  const { filter } = await searchParams;
 
   const result = await getQuestions({
     searchQuery: q,
+    filter,
   });
 
   return (
