@@ -11,12 +11,14 @@ import { SearchParamsProps } from "@/types";
 const CollectionQuestionsPage = async ({ searchParams }: SearchParamsProps) => {
   const authObject = await auth();
   const { q } = await searchParams;
+  const { filter } = await searchParams;
 
   if (!authObject.userId) return null;
 
   const result = await getSavedQuestions({
     clerkId: authObject.userId,
     searchQuery: q,
+    filter,
   });
 
   return (

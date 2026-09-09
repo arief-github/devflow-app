@@ -4,10 +4,12 @@ import LocalSearchBar from "@/components/shared/LocalSearchBar";
 import Filter from "@/components/shared/Filter";
 import { getAllTags, TagListItem } from "@/lib/actions/tags.action";
 import { SearchParamsProps } from "@/types";
+import { TagFilters } from "@/constants/filter";
 
 const Page = async ({ searchParams }: SearchParamsProps) => {
   const { q } = await searchParams;
-  const { tags } = await getAllTags({ searchQuery: q });
+  const { filter } = await searchParams;
+  const { tags } = await getAllTags({ searchQuery: q, filter });
 
   return (
     <>
@@ -20,7 +22,10 @@ const Page = async ({ searchParams }: SearchParamsProps) => {
           otherClasses="flex-1"
         />
 
-        <Filter filters={[]} otherClasses="min-h-[56px] sm:min-w-[170px]" />
+        <Filter
+          filters={TagFilters}
+          otherClasses="min-h-[56px] sm:min-w-[170px]"
+        />
       </div>
 
       <GenericCard<TagListItem>
