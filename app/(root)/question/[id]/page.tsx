@@ -12,8 +12,18 @@ import AnswerForm from "@/components/forms/AnswerForm";
 import AnswerList from "@/components/shared/AnswerList";
 import Votes from "@/components/shared/Votes";
 
-const DetailQuestionPage = async ({ params }: { params: { id: string } }) => {
+type DetailQuestionPageProps = {
+  params: { id: string };
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+};
+
+const DetailQuestionPage = async ({
+  params,
+  searchParams,
+}: DetailQuestionPageProps) => {
   const { id } = await params;
+  const { filter, page } = await searchParams;
+  const pageNumber: number | undefined = page ? Number(page) : undefined;
   const authObject = await auth();
 
   const mongoUser = !authObject.userId
@@ -112,6 +122,8 @@ const DetailQuestionPage = async ({ params }: { params: { id: string } }) => {
         questionId={question._id}
         userId={JSON.stringify(mongoUser?._id) || ""}
         totalAnswers={question.answers.length}
+        page={pageNumber}
+        filter={filter}
       />
 
       {/* Show Form Input for Answer */}

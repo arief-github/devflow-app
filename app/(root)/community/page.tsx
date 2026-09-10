@@ -5,10 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { SearchParamsProps } from "@/types";
 import { getAllUsers, UserListItem } from "@/lib/actions/user.action";
+import { UserFilters } from "@/constants/filter";
 
 const Page = async ({ searchParams }: SearchParamsProps) => {
   const { q } = await searchParams;
-  const { users } = await getAllUsers({ searchQuery: q });
+  const { filter } = await searchParams;
+  const { users } = await getAllUsers({ searchQuery: q, filter });
 
   return (
     <>
@@ -21,7 +23,10 @@ const Page = async ({ searchParams }: SearchParamsProps) => {
           otherClasses="flex-1"
         />
 
-        <Filter filters={[]} otherClasses="min-h-[56px] sm:min-w-[170px]" />
+        <Filter
+          filters={UserFilters}
+          otherClasses="min-h-[56px] sm:min-w-[170px]"
+        />
       </div>
 
       <GenericCard<UserListItem>
