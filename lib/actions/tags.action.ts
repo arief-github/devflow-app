@@ -16,6 +16,7 @@ export type TagListItem = {
   _id: string;
   name: string;
   questions: string[];
+  isNext?: boolean;
 };
 
 export async function getTopInteractedTags(params: GetTopInteractedTagsParams) {
@@ -43,11 +44,12 @@ export async function getTopInteractedTags(params: GetTopInteractedTagsParams) {
 
 export async function getAllTags(
   params: GetAllTagsParams,
-): Promise<{ tags: TagListItem[] }> {
+): Promise<{ tags: TagListItem[]; isNext: boolean }> {
   try {
     connectToDatabase();
 
-    const { searchQuery, filter } = params;
+    const { searchQuery, filter, page = 1, pageSize = 9 } = params;
+    const skipAmount = (page - 1) * pageSize;
 
     let sortOptions = {};
 
@@ -75,11 +77,16 @@ export async function getAllTags(
       query.$or = [{ name: { $regex: new RegExp(searchQuery, "i") } }];
     }
 
+    const totalTags = await Tag.countDocuments(query);
+
     const tags = await Tag.find(query)
       .sort(sortOptions)
+      .skip(skipAmount)
+      .limit(pageSize)
       .select("_id name questions")
       .lean<TagListItem[]>();
 
+    const isNext = totalTags > skipAmount + tags.length;
     return {
       tags: tags.map((tag) => ({
         _id: String(tag._id),
@@ -88,6 +95,7 @@ export async function getAllTags(
           ? tag.questions.map(String)
           : [],
       })),
+      isNext,
     };
   } catch (error) {
     console.error(error);
@@ -99,7 +107,8 @@ export async function getQuestionsByTagId(params: GetQuestionsByTagIdParams) {
   try {
     connectToDatabase();
 
-    const { tagId, searchQuery } = params;
+    const { tagId, searchQuery, page = 1, pageSize = 5 } = params;
+    const skipAmount = (page - 1) * pageSize;
 
     const tagFilter: QueryFilter<ITag> = { _id: tagId };
 
@@ -111,6 +120,8 @@ export async function getQuestionsByTagId(params: GetQuestionsByTagIdParams) {
         : {},
       options: {
         sort: { createdAt: -1 },
+        skip: skipAmount,
+        limit: pageSize + 1,
       },
       populate: [
         { path: "tags", model: Tag, select: "_id name" },
@@ -122,11 +133,13 @@ export async function getQuestionsByTagId(params: GetQuestionsByTagIdParams) {
       throw new Error("Tag not found");
     }
 
+    const isNext = tag.questions.length > pageSize;
+
     // Convert Mongoose documents (with ObjectId) to plain JSON objects
     // so the frontend receives string IDs and populated subdocuments.
     const questions = tag.questions;
 
-    return { tagTitle: tag.name, questions };
+    return { tagTitle: tag.name, questions, isNext };
   } catch (error) {
     console.error(error);
     throw error;

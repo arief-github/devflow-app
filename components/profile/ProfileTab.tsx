@@ -2,6 +2,7 @@ import { SearchParamsProps } from "@/types";
 import ProfileCardQorA from "../profile/ProfileCardQorA";
 import { getUserQuestions, getUserAnswers } from "@/lib/actions/user.action";
 import { QuestionCardProps, AnswerCardProps } from "./sharedTypes";
+import Pagination from "../shared/Pagination";
 
 interface Props extends SearchParamsProps {
   type: "question" | "answer";
@@ -15,8 +16,16 @@ export const ProfileTab = async ({
   clerkId,
   type,
 }: Props) => {
-  const resultQuestion = await getUserQuestions({ userId, page: 1 });
-  const resultAnswer = await getUserAnswers({ userId, page: 1 });
+  const { page } = await searchParams;
+
+  const resultQuestion = await getUserQuestions({
+    userId,
+    page: page ? +page : 1,
+  });
+  const resultAnswer = await getUserAnswers({
+    userId,
+    page: page ? +page : 1,
+  });
 
   return (
     <>
@@ -37,6 +46,12 @@ export const ProfileTab = async ({
               createdAt={question.createdAt}
             />
           ))}
+          <div className="mt-10">
+            <Pagination
+              pageNumber={page ? +page : 1}
+              isNext={resultQuestion.isNextQuestions}
+            />
+          </div>
         </>
       ) : null}
 
@@ -54,6 +69,12 @@ export const ProfileTab = async ({
               createdAt={answer.createdAt}
             />
           ))}
+          <div className="mt-10">
+            <Pagination
+              pageNumber={page ? +page : 1}
+              isNext={resultAnswer.isNextAnswers}
+            />
+          </div>
         </>
       ) : null}
     </>

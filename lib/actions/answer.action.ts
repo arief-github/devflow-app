@@ -42,11 +42,12 @@ export async function createAnswer(params: CreateAnswerParams) {
 
 export async function getAnswers(
   params: GetAnswersParams,
-): Promise<{ answers: IAnswerDetail[] } | null> {
+): Promise<{ answers: IAnswerDetail[]; isNextAnswer: boolean } | null> {
   try {
     connectToDatabase();
 
-    const { questionId, sortBy } = params;
+    const { questionId, sortBy, page = 1, pageSize = 2 } = params;
+    const skipAmount = (page - 1) * pageSize;
 
     let sortOptions = {};
 
@@ -70,9 +71,14 @@ export async function getAnswers(
 
     const answers = await Answer.find({ question: questionId })
       .populate("author", "_id clerkId name picture")
-      .sort(sortOptions);
+      .sort(sortOptions)
+      .skip(skipAmount)
+      .limit(pageSize);
 
-    return { answers };
+    const totalAnswer = await Answer.countDocuments({ question: questionId });
+    const isNextAnswer = totalAnswer > skipAmount + answers.length;
+
+    return { answers, isNextAnswer };
   } catch (error) {
     console.error("Error fetching answers:", error);
     throw new Error("Failed to fetch answers");
