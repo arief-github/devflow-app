@@ -5,11 +5,17 @@ import Filter from "@/components/shared/Filter";
 import { getAllTags, TagListItem } from "@/lib/actions/tags.action";
 import { SearchParamsProps } from "@/types";
 import { TagFilters } from "@/constants/filter";
+import Pagination from "@/components/shared/Pagination";
 
 const Page = async ({ searchParams }: SearchParamsProps) => {
   const { q } = await searchParams;
   const { filter } = await searchParams;
-  const { tags } = await getAllTags({ searchQuery: q, filter });
+  const { page } = await searchParams;
+  const { tags, isNext } = await getAllTags({
+    searchQuery: q,
+    filter,
+    page: page ? +page : 1,
+  });
 
   return (
     <>
@@ -58,6 +64,10 @@ const Page = async ({ searchParams }: SearchParamsProps) => {
         }
         cardClassName="shadow-light100_darknone"
       />
+
+      <div className="mt-10">
+        <Pagination isNext={isNext} pageNumber={page ? +page : 1} />
+      </div>
     </>
   );
 };

@@ -184,7 +184,9 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
   try {
     connectToDatabase();
 
-    const { clerkId, searchQuery, filter } = params;
+    const { clerkId, searchQuery, filter, page = 1, pageSize = 5 } = params;
+
+    const skipAmount = (page - 1) * pageSize;
 
     const query: QueryFilter<typeof Question> = searchQuery
       ? { title: { $regex: new RegExp(searchQuery, "i") } }
@@ -217,6 +219,8 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
       match: query,
       options: {
         sort: sortOptions,
+        skip: skipAmount,
+        limit: pageSize + 1,
       },
       populate: [
         { path: "tags", model: Tag, select: "_id name" },
@@ -230,7 +234,9 @@ export async function getSavedQuestions(params: GetSavedQuestionsParams) {
 
     const savedQuestions = user.saved;
 
-    return { questions: savedQuestions };
+    const isNext = savedQuestions.length > pageSize;
+
+    return { questions: savedQuestions, isNext };
   } catch (error) {
     console.error("Error fetching saved questions:", error);
     throw error;
@@ -265,6 +271,8 @@ export async function getUserQuestions(params: GetUserStatsParams) {
 
     const { userId, page = 1, pageSize = 10 } = params;
 
+    const skipAmount = (page - 1) * pageSize;
+
     // Normalize userId: it may be a Mongo ObjectId string or a Clerk `clerkId`.
     let authorId = userId;
     const mongoose = await import("mongoose");
@@ -279,6 +287,8 @@ export async function getUserQuestions(params: GetUserStatsParams) {
     const totalQuestions = await Question.countDocuments({ author: authorId });
 
     const userQuestions = await Question.find({ author: authorId })
+      .skip(skipAmount)
+      .limit(pageSize)
       .sort({ createdAt: -1 })
       .populate({
         path: "tags",
@@ -289,7 +299,9 @@ export async function getUserQuestions(params: GetUserStatsParams) {
         select: "_id clerkId name picture",
       });
 
-    return { questions: userQuestions, totalQuestions };
+    const isNextQuestions = totalQuestions > skipAmount + userQuestions.length;
+
+    return { questions: userQuestions, totalQuestions, isNextQuestions };
   } catch (error) {
     console.error("Error fetching user questions:", error);
     throw error;
@@ -301,6 +313,8 @@ export async function getUserAnswers(params: GetUserStatsParams) {
     connectToDatabase();
 
     const { userId, page = 1, pageSize = 10 } = params;
+
+    const skipAmount = (page - 1) * pageSize;
 
     // Normalize userId to Mongo ObjectId string when a clerkId is passed
     let authorId = userId;
@@ -316,11 +330,15 @@ export async function getUserAnswers(params: GetUserStatsParams) {
     const totalAnswers = await Answer.countDocuments({ author: authorId });
 
     const userAnswers = await Answer.find({ author: authorId })
+      .skip(skipAmount)
+      .limit(pageSize)
       .sort({ upvotes: -1 })
       .populate("question", "_id title")
       .populate("author", "_id clerkId name picture");
 
-    return { answers: userAnswers, totalAnswers };
+    const isNextAnswers = totalAnswers > skipAmount + userAnswers.length;
+
+    return { answers: userAnswers, totalAnswers, isNextAnswers };
   } catch (error) {
     console.error("Error fetching user answers:", error);
     throw error;

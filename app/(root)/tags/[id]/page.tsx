@@ -4,14 +4,16 @@ import LocalSearchBar from "@/components/shared/LocalSearchBar";
 import { QuestionCardProps } from "@/lib/types/sharedtypes";
 import { getQuestionsByTagId } from "@/lib/actions/tags.action";
 import { URLProps } from "@/types";
+import Pagination from "@/components/shared/Pagination";
 
 const Page = async ({ params, searchParams }: URLProps) => {
   const { id } = await params;
   const { q } = await searchParams;
+  const { page } = await searchParams;
 
   const result = await getQuestionsByTagId({
     tagId: id,
-    page: 1,
+    page: page ? +page : 1,
     searchQuery: q,
   });
 
@@ -54,6 +56,10 @@ const Page = async ({ params, searchParams }: URLProps) => {
             linkTitle="Ask a Question"
           />
         )}
+      </div>
+
+      <div className="mt-10">
+        <Pagination pageNumber={page ? +page : 1} isNext={result.isNext} />
       </div>
     </>
   );

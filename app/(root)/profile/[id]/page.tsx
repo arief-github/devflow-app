@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { getJoinedDate } from "@/lib/utils";
 import ProfileLink from "@/components/shared/ProfileLink";
 import Stats from "@/components/shared/Stats";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ProfileTabs from "@/components/profile/ProfileTabs.client";
+import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileTab } from "@/components/profile/ProfileTab";
 
 interface StatsCardProps {
@@ -108,7 +109,7 @@ const Page = async ({ params, searchParams }: URLProps) => {
       />
 
       <div className="mt-10 flex gap-10">
-        <Tabs defaultValue="top-posts" className="flex-1">
+        <ProfileTabs defaultValue="top-posts" className="flex-1">
           <TabsList className="background-light800_dark400 min-h-10.5 p-1">
             <TabsTrigger value="top-posts" className="tab">
               Top Posts
@@ -133,7 +134,7 @@ const Page = async ({ params, searchParams }: URLProps) => {
               type="answer"
             />
           </TabsContent>
-        </Tabs>
+        </ProfileTabs>
       </div>
     </>
   );

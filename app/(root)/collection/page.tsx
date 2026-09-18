@@ -7,11 +7,13 @@ import { getSavedQuestions } from "@/lib/actions/user.action";
 import { auth } from "@clerk/nextjs/server";
 import { QuestionCardProps } from "@/lib/types/sharedtypes";
 import { SearchParamsProps } from "@/types";
+import Pagination from "@/components/shared/Pagination";
 
 const CollectionQuestionsPage = async ({ searchParams }: SearchParamsProps) => {
   const authObject = await auth();
   const { q } = await searchParams;
   const { filter } = await searchParams;
+  const { page } = await searchParams;
 
   if (!authObject.userId) return null;
 
@@ -19,6 +21,7 @@ const CollectionQuestionsPage = async ({ searchParams }: SearchParamsProps) => {
     clerkId: authObject.userId,
     searchQuery: q,
     filter,
+    page: page ? +page : 1,
   });
 
   return (
@@ -63,6 +66,10 @@ const CollectionQuestionsPage = async ({ searchParams }: SearchParamsProps) => {
             linkTitle="Ask a Question"
           />
         )}
+      </div>
+
+      <div className="mt-10">
+        <Pagination pageNumber={page ? +page : 1} isNext={result.isNext} />
       </div>
     </>
   );
