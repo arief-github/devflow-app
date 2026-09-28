@@ -94,6 +94,7 @@ export async function deleteUser(params: DeleteUserParams) {
 
 export type UserListItem = {
   _id: string;
+  clerkId: string;
   picture: string;
   name: string;
   username: string;
