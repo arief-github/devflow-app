@@ -32,7 +32,7 @@ const Page = async ({ searchParams }: SearchParamsProps) => {
       <GenericCard<UserListItem>
         title="All Users"
         items={users}
-        getLinkHref={(user) => `/community/${user._id}`}
+        getLinkHref={(user) => `/profile/${user.clerkId}`}
         renderCard={(user) => {
           return (
             <div className="shadow-light100_darknone background-light900_dark200 light-border rounded-2xl border px-8 py-10">

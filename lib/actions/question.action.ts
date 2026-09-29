@@ -121,9 +121,16 @@ export async function createQuestion(params: CreateQuestionParams) {
       $push: { tags: { $each: tagDocuments } },
     });
 
-    // TODO: Create an interaction record for the user's ask_question action
+    // Create an interaction record for the user's ask_question action
+    await Interaction.create({
+      user: author,
+      action: "ask_question",
+      question: question._id,
+      tags: tagDocuments,
+    });
+    // Increment author's reputation by +5 for creating a question
+    await User.findByIdAndUpdate(author, { $inc: { reputation: 5 } });
 
-    // TODO: Increment author's reputation by +5 for creating a question
     revalidatePath(path);
   } catch (error) {
     console.error("Error connecting to database:", error);
@@ -140,10 +147,14 @@ export async function voteQuestion(
 
     const { questionId, userId, hasupVoted, hasdownVoted, path } = params;
 
+    const question = await Question.findById(questionId).select("author");
+    if (!question) throw new Error("Question not found");
+
     await voteFunction({
       model: Question,
       id: questionId,
       userId,
+      authorId: String(question.author),
       hasupVoted,
       hasdownVoted,
       voteType,

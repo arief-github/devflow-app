@@ -1,11 +1,13 @@
 import type { Document, Model } from "mongoose";
 import { revalidatePath } from "next/cache";
 import type { VoteType } from "../types/sharedtypes";
+import User from "@/database/user.model";
 
 type VoteFunctionParams<T extends Document> = {
   model: Model<T>;
   id: string;
   userId: string;
+  authorId?: string;
   hasupVoted: boolean;
   hasdownVoted: boolean;
   voteType: VoteType;
@@ -17,6 +19,7 @@ export async function voteFunction<T extends Document>({
   model,
   id,
   userId,
+  authorId,
   hasupVoted,
   hasdownVoted,
   voteType,
@@ -50,6 +53,16 @@ export async function voteFunction<T extends Document>({
   if (!updatedItem) {
     throw new Error(`${entityName} not found`);
   }
+  // Increment or decrement the author's reputation based on the vote
+  const voterRepChange = hasVotedOnTarget ? -2 : 2;
+  const authorRepChange = hasVotedOnTarget ? -10 : 10;
+
+  await Promise.all([
+    // voter : action voting
+    User.findByIdAndUpdate(userId, { $inc: { reputation: voterRepChange } }),
+    // author : action received
+    User.findByIdAndUpdate(authorId, { $inc: { reputation: authorRepChange } }),
+  ]);
 
   revalidatePath(path);
 

@@ -13,6 +13,7 @@ import Question from "@/database/question.model";
 import { revalidatePath } from "next/cache";
 import { voteFunction } from "../helpers/vote";
 import Interaction from "@/database/interaction.model";
+import User from "@/database/user.model";
 
 export async function createAnswer(params: CreateAnswerParams) {
   try {
@@ -27,11 +28,19 @@ export async function createAnswer(params: CreateAnswerParams) {
     });
 
     // add the answer to the question's answers array
-    await Question.findByIdAndUpdate(question, {
+    const questionObject = await Question.findByIdAndUpdate(question, {
       $push: { answers: newAnswer._id },
     });
 
-    // TODO! add interaction..
+    await Interaction.create({
+      user: author,
+      action: "answer",
+      question,
+      answer: newAnswer._id,
+      tags: questionObject.tags,
+    });
+
+    await User.findByIdAndUpdate(author, { $inc: { reputation: 10 } });
 
     revalidatePath(path);
   } catch (error) {
@@ -94,9 +103,13 @@ export async function voteAnswer(
 
     const { answerId, userId, hasupVoted, hasdownVoted, path } = params;
 
+    const answer = await Answer.findById(answerId).select("author");
+    if (!answer) throw new Error("Answer not found");
+
     await voteFunction({
       model: Answer,
       id: answerId,
+      authorId: String(answer.author),
       userId,
       hasupVoted,
       hasdownVoted,
