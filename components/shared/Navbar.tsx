@@ -4,6 +4,7 @@ import Theme from "./Theme";
 import AuthSection from "./AuthSection";
 import MobileNav from "./MobileNav";
 import GlobalSearch from "./GlobalSearch";
+import { Suspense } from "react";
 
 const Navbar = () => {
   return (
@@ -20,7 +21,15 @@ const Navbar = () => {
         </p>
       </Link>
 
-      <GlobalSearch />
+      <Suspense
+        fallback={
+          <div className="relative w-full max-w-150 max-lg:hidden">
+            <div className="background-light800_darkgradient min-h-14 rounded-xl" />
+          </div>
+        }
+      >
+        <GlobalSearch />
+      </Suspense>
 
       <div className="flex-between gap-1 sm:gap-5">
         {/* Theme */}
