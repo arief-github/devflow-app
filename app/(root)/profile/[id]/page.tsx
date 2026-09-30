@@ -11,30 +11,7 @@ import Stats from "@/components/shared/Stats";
 import ProfileTabs from "@/components/profile/ProfileTabs.client";
 import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileTab } from "@/components/profile/ProfileTab";
-
-interface StatsCardProps {
-  imgUrl: string;
-  value: number;
-  title: string;
-}
-
-const StatsCardItems: StatsCardProps[] = [
-  {
-    imgUrl: "/icons/gold-medal.svg",
-    value: 0,
-    title: "Gold Badges",
-  },
-  {
-    imgUrl: "/icons/silver-medal.svg",
-    value: 0,
-    title: "Silver Badges",
-  },
-  {
-    imgUrl: "/icons/bronze-medal.svg",
-    value: 0,
-    title: "Bronze Badges",
-  },
-];
+import { StatsCardProps } from "@/lib/types/sharedtypes";
 
 const Page = async ({ params, searchParams }: URLProps) => {
   const { id } = await params;
@@ -42,6 +19,28 @@ const Page = async ({ params, searchParams }: URLProps) => {
   const clerkId = authObject.userId;
 
   const userInfo = await getUserInfo({ userId: id });
+
+  const GOLD_BADGES_VALUE = userInfo.badgeCounts.GOLD;
+  const SILVER_BADGES_VALUE = userInfo.badgeCounts.SILVER;
+  const BRONZE_BADGES_VALUE = userInfo.badgeCounts.BRONZE;
+
+  const StatsCardItems: StatsCardProps[] = [
+    {
+      imgUrl: "/icons/gold-medal.svg",
+      value: GOLD_BADGES_VALUE,
+      title: "Gold Badges",
+    },
+    {
+      imgUrl: "/icons/silver-medal.svg",
+      value: SILVER_BADGES_VALUE,
+      title: "Silver Badges",
+    },
+    {
+      imgUrl: "/icons/bronze-medal.svg",
+      value: BRONZE_BADGES_VALUE,
+      title: "Bronze Badges",
+    },
+  ];
 
   return (
     <>

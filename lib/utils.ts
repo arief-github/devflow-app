@@ -2,6 +2,9 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import qs from "query-string";
 
+import { BADGE_CRITERIA, BADGE_LEVELS } from "@/constants";
+import type { BadgeCounts, BadgeParam } from "@/types";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -100,4 +103,20 @@ export const removeKeysFromQuery = ({
     url: window.location.pathname,
     query: currentUrl,
   });
+};
+
+export const assignBadges = ({ criteria }: BadgeParam): BadgeCounts => {
+  const badgeCounts: BadgeCounts = { GOLD: 0, SILVER: 0, BRONZE: 0 };
+
+  for (const { type, count } of criteria) {
+    const thresholds = BADGE_CRITERIA[type];
+
+    for (const level of BADGE_LEVELS) {
+      if (count >= thresholds[level]) {
+        badgeCounts[level] += 1;
+      }
+    }
+  }
+
+  return badgeCounts;
 };

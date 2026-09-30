@@ -1,4 +1,5 @@
 import { SidebarLink } from "@/types";
+import { BadgeCriteria, BadgeLevel } from "@/types";
 
 export const themes = [
   { value: "light", label: "Light", icon: "/icons/sun.svg" },
@@ -44,6 +45,8 @@ export const sidebarLinks: SidebarLink[] = [
   },
 ];
 
+export const BADGE_LEVELS: readonly BadgeLevel[] = ["BRONZE", "SILVER", "GOLD"];
+
 export const BADGE_CRITERIA = {
   QUESTION_COUNT: {
     BRONZE: 10,
@@ -70,4 +73,4 @@ export const BADGE_CRITERIA = {
     SILVER: 10000,
     GOLD: 100000,
   },
-};
+} satisfies BadgeCriteria;

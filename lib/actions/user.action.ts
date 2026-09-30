@@ -13,9 +13,12 @@ import {
   UpdateUserParams,
 } from "../types/sharedtypes";
 import { revalidatePath } from "next/cache";
+import type { BadgeParam } from "@/types";
+import { Types } from "mongoose";
 import Question from "@/database/question.model";
 import Tag from "@/database/tag.model";
 import Answer from "@/database/answer.model";
+import { assignBadges } from "../utils";
 
 type GetUserByIdParams = {
   userId: string;
@@ -259,7 +262,43 @@ export async function getUserInfo(params: GetUserByIdParams) {
     const totalQuestion = await Question.countDocuments({ author: user._id });
     const totalAnswers = await Answer.countDocuments({ author: user._id });
 
-    return { user, totalQuestion, totalAnswers };
+    const sumUpvotes = (authorId: Types.ObjectId) => [
+      { $match: { author: authorId } },
+      {
+        $group: {
+          _id: null,
+          totalUpvotes: { $sum: { $size: { $ifNull: ["$upvotes", []] } } },
+        },
+      },
+    ];
+
+    const [[questionUpvotes], [answerUpvotes], [questionViews]] =
+      await Promise.all([
+        Question.aggregate(sumUpvotes(user._id)),
+        Answer.aggregate(sumUpvotes(user._id)),
+        Question.aggregate([
+          { $match: { author: user._id } },
+          { $group: { _id: null, totalViews: { $sum: "$views" } } },
+        ]),
+      ]);
+
+    const criteria: BadgeParam["criteria"] = [
+      { type: "QUESTION_COUNT", count: totalQuestion },
+      { type: "ANSWER_COUNT", count: totalAnswers },
+      { type: "QUESTION_UPVOTES", count: questionUpvotes?.totalUpvotes ?? 0 },
+      { type: "ANSWER_UPVOTES", count: answerUpvotes?.totalUpvotes ?? 0 },
+      { type: "TOTAL_VIEWS", count: questionViews?.totalViews ?? 0 },
+    ];
+
+    const badgeCounts = assignBadges({ criteria });
+
+    return {
+      user,
+      totalQuestion,
+      totalAnswers,
+      badgeCounts,
+      reputation: user.reputation,
+    };
   } catch (error) {
     console.error("Error fetching user info:", error);
     throw error;

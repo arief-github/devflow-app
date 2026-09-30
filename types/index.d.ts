@@ -35,10 +35,27 @@ export interface URLProps {
   searchParams: { [key: string]: string | undefined };
 }
 
-export interface BadgeCounts {
-  GOLD: number;
-  SILVER: number;
-  BRONZE: number;
-}
+export type BadgeLevel = "BRONZE" | "SILVER" | "GOLD";
 
-export type BadgeCriteriaType = keyof typeof BADGE_CRITERIA;
+export type BadgeCriteriaType =
+  | "QUESTION_COUNT"
+  | "ANSWER_COUNT"
+  | "QUESTION_UPVOTES"
+  | "ANSWER_UPVOTES"
+  | "TOTAL_VIEWS";
+
+export type BadgeCounts = Record<BadgeLevel, number>;
+export type BadgeThresholds = Readonly<Record<BadgeLevel, number>>;
+
+export type BadgeCriteria = Readonly<
+  Record<BadgeCriteriaType, BadgeThresholds>
+>;
+
+export type BadgeCriterion = {
+  type: BadgeCriteriaType;
+  count: number;
+};
+
+export interface BadgeParam {
+  criteria: readonly BadgeCriterion[];
+}
