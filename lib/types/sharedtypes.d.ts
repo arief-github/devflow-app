@@ -209,3 +209,9 @@ export interface QuestionCardProps {
   answers: Array<object>;
   createdAt: Date;
 }
+
+export interface StatsCardProps {
+  imgUrl: string;
+  value: number;
+  title: string;
+}

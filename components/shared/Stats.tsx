@@ -1,4 +1,5 @@
 import { formatAndDivideNumber } from "@/lib/utils";
+import { StatsCardProps } from "@/lib/types/sharedtypes";
 import Image from "next/image";
 
 // Stats component
@@ -6,12 +7,6 @@ interface Props {
   totalQuestions: number;
   totalAnswers: number;
   badgesItems?: StatsCardProps[];
-}
-
-interface StatsCardProps {
-  imgUrl: string;
-  value: number;
-  title: string;
 }
 
 const Stats = ({ totalQuestions, totalAnswers, badgesItems }: Props) => {
