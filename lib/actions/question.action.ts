@@ -1,7 +1,6 @@
 "use server";
 
 import Question from "@/database/question.model";
-import { connectToDatabase } from "../mongoose";
 import {
   CreateQuestionParams,
   DeleteQuestionParams,
@@ -19,11 +18,15 @@ import { voteFunction } from "../helpers/vote";
 import Interaction from "@/database/interaction.model";
 import Answer from "@/database/answer.model";
 import { QueryFilter } from "mongoose";
+import { withDatabase } from "./with-database";
 
-export async function getQuestions(params: GetQuestionsParams) {
-  try {
-    connectToDatabase();
+/* -------------------------------------------------------------------------- */
+/*                                  Actions                                   */
+/* -------------------------------------------------------------------------- */
 
+const getQuestions = withDatabase(
+  "getQuestions",
+  async (params: GetQuestionsParams) => {
     const { searchQuery, filter, page = 1, pageSize = 5 } = params;
 
     const skipAmount = (page - 1) * pageSize;
@@ -65,17 +68,14 @@ export async function getQuestions(params: GetQuestionsParams) {
     const isNext = totalQuestions > skipAmount + pageSize;
 
     return { questions, isNext };
-  } catch (error) {
-    throw error;
-  }
-}
+  },
+);
 
-export async function getQuestionById(
-  params: GetQuestionByIdParams,
-): Promise<{ question: IQuestionDetail | null }> {
-  try {
-    connectToDatabase();
-
+const getQuestionById = withDatabase(
+  "getQuestionById",
+  async (
+    params: GetQuestionByIdParams,
+  ): Promise<{ question: IQuestionDetail | null }> => {
     const { questionId } = params;
 
     const question = await Question.findById(questionId)
@@ -88,16 +88,12 @@ export async function getQuestionById(
       .lean<IQuestionDetail>();
 
     return { question };
-  } catch (error) {
-    console.error("Error fetching question by ID:", error);
-    throw error;
-  }
-}
+  },
+);
 
-export async function createQuestion(params: CreateQuestionParams) {
-  try {
-    await connectToDatabase();
-
+const createQuestion = withDatabase(
+  "createQuestion",
+  async (params: CreateQuestionParams) => {
     const { title, content, tags, author, path } = params;
 
     const question = await Question.create({
@@ -132,19 +128,13 @@ export async function createQuestion(params: CreateQuestionParams) {
     await User.findByIdAndUpdate(author, { $inc: { reputation: 5 } });
 
     revalidatePath(path);
-  } catch (error) {
-    console.error("Error connecting to database:", error);
-    throw new Error("Failed to connect to database");
-  }
-}
+  },
+  { errorMessage: "Failed to connect to database" },
+);
 
-export async function voteQuestion(
-  params: QuestionVoteParams,
-  voteType: VoteType,
-) {
-  try {
-    connectToDatabase();
-
+const voteQuestion = withDatabase(
+  "voteQuestion",
+  async (params: QuestionVoteParams, voteType: VoteType) => {
     const { questionId, userId, hasupVoted, hasdownVoted, path } = params;
 
     const question = await Question.findById(questionId).select("author");
@@ -161,24 +151,20 @@ export async function voteQuestion(
       path,
       entityName: "Question",
     });
-  } catch (error) {
-    console.error(`Error occurred while ${voteType}ing question:`, error);
-    throw error;
-  }
-}
+  },
+);
 
-export async function upvoteQuestion(params: QuestionVoteParams) {
+async function upvoteQuestion(params: QuestionVoteParams) {
   return voteQuestion(params, "upvote");
 }
 
-export async function downvoteQuestion(params: QuestionVoteParams) {
+async function downvoteQuestion(params: QuestionVoteParams) {
   return voteQuestion(params, "downvote");
 }
 
-export async function deleteQuestion(params: DeleteQuestionParams) {
-  try {
-    connectToDatabase();
-
+const deleteQuestion = withDatabase(
+  "deleteQuestion",
+  async (params: DeleteQuestionParams) => {
     const { questionId, path } = params;
 
     await Question.deleteOne({ _id: questionId });
@@ -190,16 +176,13 @@ export async function deleteQuestion(params: DeleteQuestionParams) {
     );
 
     revalidatePath(path);
-  } catch (error) {
-    console.error("Error deleting question:", error);
-    throw new Error("Failed to delete question");
-  }
-}
+  },
+  { errorMessage: "Failed to delete question" },
+);
 
-export async function editQuestion(params: EditQuestionParams) {
-  try {
-    connectToDatabase();
-
+const editQuestion = withDatabase(
+  "editQuestion",
+  async (params: EditQuestionParams) => {
     const { questionId, path, title, content } = params;
 
     const question = await Question.findById(questionId).populate("tags");
@@ -214,22 +197,30 @@ export async function editQuestion(params: EditQuestionParams) {
     await question.save();
 
     revalidatePath(path);
-  } catch (error) {
-    console.error("Error editing question:", error);
-    throw new Error("Failed to edit question");
-  }
-}
+  },
+  { errorMessage: "Failed to edit question" },
+);
 
-export async function getHotQuestions() {
-  try {
-    connectToDatabase();
+const getHotQuestions = withDatabase("getHotQuestions", async () => {
+  const hotQuestions = await Question.find({})
+    .sort({ views: -1, upvotes: -1 })
+    .limit(5);
 
-    const hotQuestions = await Question.find({})
-      .sort({ views: -1, upvotes: -1 })
-      .limit(5);
+  return hotQuestions;
+});
 
-    return hotQuestions;
-  } catch (error) {
-    throw error;
-  }
-}
+/* -------------------------------------------------------------------------- */
+/*                                  Exports                                   */
+/* -------------------------------------------------------------------------- */
+
+export {
+  createQuestion,
+  deleteQuestion,
+  downvoteQuestion,
+  editQuestion,
+  getHotQuestions,
+  getQuestionById,
+  getQuestions,
+  upvoteQuestion,
+  voteQuestion,
+};

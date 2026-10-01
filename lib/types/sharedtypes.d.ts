@@ -215,3 +215,20 @@ export interface StatsCardProps {
   value: number;
   title: string;
 }
+
+export type UserListItem = {
+  _id: string;
+  clerkId: string;
+  picture: string;
+  name: string;
+  username: string;
+  bio?: string;
+  reputation?: number;
+};
+
+export type TagListItem = {
+  _id: string;
+  name: string;
+  questions: string[];
+  isNext?: boolean;
+};

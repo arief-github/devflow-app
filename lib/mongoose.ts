@@ -1,26 +1,45 @@
+import "server-only";
 import mongoose from "mongoose";
 
-let isConnected: boolean = false;
+type MongooseCache = {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+};
 
-export const connectToDatabase = async () => {
-  mongoose.set("strictQuery", true);
+declare global {
+  // eslint-disable-next-line no-var
+  var mongooseCache: MongooseCache | undefined;
+}
 
-  if (!process.env.NEXT_PUBLIC_MONGODB_URL) {
-    return console.log("MISSING NEXT_PUBLIC_MONGODB_URL");
+// Disimpan di globalThis agar bertahan saat HMR di mode dev
+const cache: MongooseCache = (globalThis.mongooseCache ??= {
+  conn: null,
+  promise: null,
+});
+
+export async function connectToDatabase(): Promise<typeof mongoose> {
+  if (cache.conn) return cache.conn;
+
+  const url = process.env.MONGODB_URL;
+  if (!url) {
+    throw new Error("Missing MONGODB_URL environment variable");
   }
 
-  if (isConnected) {
-    return console.log("MongoDB is already connected");
+  // Request bersamaan akan menunggu promise yang SAMA → hanya 1x connect
+  if (!cache.promise) {
+    mongoose.set("strictQuery", true);
+    cache.promise = mongoose.connect(url, {
+      dbName: "devflow",
+      bufferCommands: false, // gagal cepat jika query jalan tanpa koneksi
+    });
   }
 
   try {
-    await mongoose.connect(process.env.NEXT_PUBLIC_MONGODB_URL, {
-      dbName: "devflow",
-    });
-
-    isConnected = true;
-    console.log("MongoDB connected successfully");
+    cache.conn = await cache.promise;
   } catch (error) {
-    console.error("MongoDB connection failed", error);
+    cache.promise = null; // izinkan retry di request berikutnya
+    throw error;
   }
-};
+
+  return cache.conn;
+}

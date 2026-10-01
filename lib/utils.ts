@@ -120,3 +120,7 @@ export const assignBadges = ({ criteria }: BadgeParam): BadgeCounts => {
 
   return badgeCounts;
 };
+
+/** Regex case-insensitive dari input user, dengan karakter khusus di-escape */
+export const toSearchRegex = (query: string) =>
+  new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");

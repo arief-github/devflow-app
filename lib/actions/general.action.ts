@@ -5,8 +5,8 @@ import Question from "@/database/question.model";
 import User from "@/database/user.model";
 import Answer from "@/database/answer.model";
 import Tag from "@/database/tag.model";
-import { connectToDatabase } from "../mongoose";
 import { SearchParams } from "../types/sharedtypes";
+import { withDatabase } from "./with-database";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -66,10 +66,9 @@ function buildResult(
 
 // ─── Server Action ────────────────────────────────────────────────────────────
 
-export async function globalSearch(params: SearchParams) {
-  try {
-    await connectToDatabase();
-
+const globalSearch = withDatabase(
+  "globalSearch",
+  async (params: SearchParams) => {
     const { query, type } = params;
     const normalizedQuery = query?.trim() ?? "";
     const regexQuery = { $regex: normalizedQuery, $options: "i" };
@@ -118,8 +117,9 @@ export async function globalSearch(params: SearchParams) {
     }
 
     return JSON.stringify(results);
-  } catch (error) {
-    console.error("Error fetching global results:", error);
-    throw error;
-  }
-}
+  },
+);
+
+// ─── Exports ──────────────────────────────────────────────────────────────────
+
+export { globalSearch };
