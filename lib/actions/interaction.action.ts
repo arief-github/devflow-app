@@ -1,14 +1,13 @@
 "use server";
 
 import Question from "@/database/question.model";
-import { connectToDatabase } from "../mongoose";
 import { ViewQuestionParams } from "../types/sharedtypes";
 import Interaction from "@/database/interaction.model";
+import { withDatabase } from "./with-database";
 
-export async function viewQuestion(params: ViewQuestionParams) {
-  try {
-    await connectToDatabase();
-
+const viewQuestion = withDatabase(
+  "viewQuestion",
+  async (params: ViewQuestionParams) => {
     const { questionId, userId } = params;
 
     await Question.findByIdAndUpdate(questionId, { $inc: { views: 1 } });
@@ -28,8 +27,7 @@ export async function viewQuestion(params: ViewQuestionParams) {
         question: questionId,
       });
     }
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-}
+  },
+);
+
+export { viewQuestion };

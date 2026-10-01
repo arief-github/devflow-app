@@ -1,7 +1,6 @@
 "use server";
 
 import User from "@/database/user.model";
-import { connectToDatabase } from "../mongoose";
 import { QueryFilter } from "mongoose";
 
 import Tag, { ITag } from "@/database/tag.model";
@@ -9,20 +8,18 @@ import {
   GetAllTagsParams,
   GetQuestionsByTagIdParams,
   GetTopInteractedTagsParams,
+  TagListItem,
 } from "../types/sharedtypes";
 import Question from "@/database/question.model";
+import { withDatabase } from "./with-database";
 
-export type TagListItem = {
-  _id: string;
-  name: string;
-  questions: string[];
-  isNext?: boolean;
-};
+/* -------------------------------------------------------------------------- */
+/*                                  Actions                                   */
+/* -------------------------------------------------------------------------- */
 
-export async function getTopInteractedTags(params: GetTopInteractedTagsParams) {
-  try {
-    connectToDatabase();
-
+const getTopInteractedTags = withDatabase(
+  "getTopInteractedTags",
+  async (params: GetTopInteractedTagsParams) => {
     const { userId } = params;
 
     const user = await User.findById(userId);
@@ -36,18 +33,14 @@ export async function getTopInteractedTags(params: GetTopInteractedTagsParams) {
       { _id: "1", name: "tag" },
       { _id: "2", name: "tag2" },
     ];
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-}
+  },
+);
 
-export async function getAllTags(
-  params: GetAllTagsParams,
-): Promise<{ tags: TagListItem[]; isNext: boolean }> {
-  try {
-    connectToDatabase();
-
+const getAllTags = withDatabase(
+  "getAllTags",
+  async (
+    params: GetAllTagsParams,
+  ): Promise<{ tags: TagListItem[]; isNext: boolean }> => {
     const { searchQuery, filter, page = 1, pageSize = 9 } = params;
     const skipAmount = (page - 1) * pageSize;
 
@@ -97,16 +90,12 @@ export async function getAllTags(
       })),
       isNext,
     };
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-}
+  },
+);
 
-export async function getQuestionsByTagId(params: GetQuestionsByTagIdParams) {
-  try {
-    connectToDatabase();
-
+const getQuestionsByTagId = withDatabase(
+  "getQuestionsByTagId",
+  async (params: GetQuestionsByTagIdParams) => {
     const { tagId, searchQuery, page = 1, pageSize = 5 } = params;
     const skipAmount = (page - 1) * pageSize;
 
@@ -140,25 +129,26 @@ export async function getQuestionsByTagId(params: GetQuestionsByTagIdParams) {
     const questions = tag.questions;
 
     return { tagTitle: tag.name, questions, isNext };
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-}
+  },
+);
 
-export async function getTopPopularTags() {
-  try {
-    connectToDatabase();
+const getTopPopularTags = withDatabase("getTopPopularTags", async () => {
+  const popularTags = await Tag.aggregate([
+    { $project: { name: 1, numberOfQuestions: { $size: "$questions" } } },
+    { $sort: { numberOfQuestions: -1 } },
+    { $limit: 5 },
+  ]);
 
-    const popularTags = await Tag.aggregate([
-      { $project: { name: 1, numberOfQuestions: { $size: "$questions" } } },
-      { $sort: { numberOfQuestions: -1 } },
-      { $limit: 5 },
-    ]);
+  return popularTags;
+});
 
-    return popularTags;
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-}
+/* -------------------------------------------------------------------------- */
+/*                                  Exports                                   */
+/* -------------------------------------------------------------------------- */
+
+export {
+  getAllTags,
+  getQuestionsByTagId,
+  getTopInteractedTags,
+  getTopPopularTags,
+};

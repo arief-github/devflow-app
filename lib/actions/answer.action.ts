@@ -1,7 +1,6 @@
 "use server";
 
 import Answer from "@/database/answer.model";
-import { connectToDatabase } from "../mongoose";
 import {
   AnswerVoteParams,
   CreateAnswerParams,
@@ -14,11 +13,15 @@ import { revalidatePath } from "next/cache";
 import { voteFunction } from "../helpers/vote";
 import Interaction from "@/database/interaction.model";
 import User from "@/database/user.model";
+import { withDatabase } from "./with-database";
 
-export async function createAnswer(params: CreateAnswerParams) {
-  try {
-    connectToDatabase();
+/* -------------------------------------------------------------------------- */
+/*                                  Actions                                   */
+/* -------------------------------------------------------------------------- */
 
+const createAnswer = withDatabase(
+  "createAnswer",
+  async (params: CreateAnswerParams) => {
     const { content, author, question, path } = params;
 
     const newAnswer = await Answer.create({
@@ -43,18 +46,15 @@ export async function createAnswer(params: CreateAnswerParams) {
     await User.findByIdAndUpdate(author, { $inc: { reputation: 10 } });
 
     revalidatePath(path);
-  } catch (error) {
-    console.error("Error creating answer:", error);
-    throw new Error("Failed to create answer");
-  }
-}
+  },
+  { errorMessage: "Failed to create answer" },
+);
 
-export async function getAnswers(
-  params: GetAnswersParams,
-): Promise<{ answers: IAnswerDetail[]; isNextAnswer: boolean } | null> {
-  try {
-    connectToDatabase();
-
+const getAnswers = withDatabase(
+  "getAnswers",
+  async (
+    params: GetAnswersParams,
+  ): Promise<{ answers: IAnswerDetail[]; isNextAnswer: boolean } | null> => {
     const { questionId, sortBy, page = 1, pageSize = 2 } = params;
     const skipAmount = (page - 1) * pageSize;
 
@@ -88,19 +88,13 @@ export async function getAnswers(
     const isNextAnswer = totalAnswer > skipAmount + answers.length;
 
     return { answers, isNextAnswer };
-  } catch (error) {
-    console.error("Error fetching answers:", error);
-    throw new Error("Failed to fetch answers");
-  }
-}
+  },
+  { errorMessage: "Failed to fetch answers" },
+);
 
-export async function voteAnswer(
-  params: AnswerVoteParams,
-  voteType: "upvote" | "downvote",
-) {
-  try {
-    connectToDatabase();
-
+const voteAnswer = withDatabase(
+  "voteAnswer",
+  async (params: AnswerVoteParams, voteType: "upvote" | "downvote") => {
     const { answerId, userId, hasupVoted, hasdownVoted, path } = params;
 
     const answer = await Answer.findById(answerId).select("author");
@@ -117,24 +111,20 @@ export async function voteAnswer(
       path,
       entityName: "Answer",
     });
-  } catch (error) {
-    console.error(`Error occurred while ${voteType}ing answer:`, error);
-    throw error;
-  }
-}
+  },
+);
 
-export async function upvoteAnswer(params: AnswerVoteParams) {
+async function upvoteAnswer(params: AnswerVoteParams) {
   return voteAnswer(params, "upvote");
 }
 
-export async function downvoteAnswer(params: AnswerVoteParams) {
+async function downvoteAnswer(params: AnswerVoteParams) {
   return voteAnswer(params, "downvote");
 }
 
-export async function deleteAnswer(params: DeleteAnswerParams) {
-  try {
-    connectToDatabase();
-
+const deleteAnswer = withDatabase(
+  "deleteAnswer",
+  async (params: DeleteAnswerParams) => {
     const { answerId, path } = params;
 
     const answer = await Answer.findById(answerId);
@@ -151,8 +141,19 @@ export async function deleteAnswer(params: DeleteAnswerParams) {
     await Interaction.deleteMany({ answer: answerId });
 
     revalidatePath(path);
-  } catch (error) {
-    console.error("Error deleting answer:", error);
-    throw new Error("Failed to delete answer");
-  }
-}
+  },
+  { errorMessage: "Failed to delete answer" },
+);
+
+/* -------------------------------------------------------------------------- */
+/*                                  Exports                                   */
+/* -------------------------------------------------------------------------- */
+
+export {
+  createAnswer,
+  deleteAnswer,
+  downvoteAnswer,
+  getAnswers,
+  upvoteAnswer,
+  voteAnswer,
+};

@@ -2,10 +2,11 @@ import GenericCard from "@/components/shared/GenericCard";
 import NoResult from "@/components/shared/NoResult";
 import LocalSearchBar from "@/components/shared/LocalSearchBar";
 import Filter from "@/components/shared/Filter";
-import { getAllTags, TagListItem } from "@/lib/actions/tags.action";
+import { getAllTags } from "@/lib/actions/tags.action";
 import { SearchParamsProps } from "@/types";
 import { TagFilters } from "@/constants/filter";
 import Pagination from "@/components/shared/Pagination";
+import { TagListItem } from "@/lib/types/sharedtypes";
 
 const Page = async ({ searchParams }: SearchParamsProps) => {
   const { q } = await searchParams;
