@@ -11,6 +11,7 @@ import { downvoteAnswer, upvoteAnswer } from "@/lib/actions/answer.action";
 import { toggleSaveQuestion } from "@/lib/actions/user.action";
 import { useEffect } from "react";
 import { viewQuestion } from "@/lib/actions/interaction.action";
+import { toast } from "sonner";
 
 interface Props {
   type: "Question" | "Answer";
@@ -53,11 +54,18 @@ const Votes = ({
   })();
 
   const handleSave = async () => {
-    await toggleSaveQuestion({
-      userId: normalizedUserId,
-      questionId: normalizedItemId,
-      path: pathname,
-    });
+    await toast.promise(
+      toggleSaveQuestion({
+        userId: normalizedUserId,
+        questionId: normalizedItemId,
+        path: pathname,
+      }),
+      {
+        loading: "Saving...",
+        success: "Saved!",
+        error: "Failed to save.",
+      },
+    );
   };
 
   const handleVote = async (action: "upvote" | "downvote") => {

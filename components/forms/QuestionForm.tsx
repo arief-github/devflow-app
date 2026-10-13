@@ -21,6 +21,7 @@ import { useRef, useState } from "react";
 import { Badge } from "../ui/badge";
 import { createQuestion, editQuestion } from "@/lib/actions/question.action";
 import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 type QuestionFormType = "create" | "edit";
 
@@ -77,23 +78,37 @@ const QuestionForm = ({
   async function onSubmit(values: z.infer<typeof QuestionformSchema>) {
     setIsSubmitting(true);
 
+    const isEdit = mode === "edit";
+
     try {
-      if (mode === "edit") {
-        await editQuestion({
-          questionId: parsedQuestionDetails?._id ?? "",
-          title: values.title,
-          content: values.explanation,
-          path: pathname,
-        });
-      } else {
-        await createQuestion({
-          title: values.title,
-          content: values.explanation,
-          tags: values.tags,
-          author: mongoUserId,
-          path: pathname,
-        });
-      }
+      const request = isEdit
+        ? editQuestion({
+            questionId: parsedQuestionDetails?._id ?? "",
+            title: values.title,
+            content: values.explanation,
+            path: pathname,
+          })
+        : createQuestion({
+            title: values.title,
+            content: values.explanation,
+            tags: values.tags,
+            author: mongoUserId,
+            path: pathname,
+          });
+
+      // Toast loading → sukses/gagal. unwrap() tetap melempar error,
+      // sehingga router.push di bawah tidak jalan jika gagal.
+      await toast
+        .promise(request, {
+          loading: isEdit
+            ? "Updating your question..."
+            : "Posting your question...",
+          success: isEdit ? "Question updated" : "Question posted",
+          error: isEdit
+            ? "Failed to update question. Please try again."
+            : "Failed to post question. Please try again.",
+        })
+        .unwrap();
 
       // navigate to home page
       router.push("/");
