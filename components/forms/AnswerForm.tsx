@@ -11,18 +11,14 @@ import dynamic from "next/dynamic";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useRef,
-  useState,
-  useCallback,
-  type FormEvent,
-} from "react";
+import { useRef, useState, useCallback, type FormEvent } from "react";
 import { useTheme } from "@/context/ThemeProvider";
 import { Button } from "../ui/button";
 import Image from "next/image";
 import { createAnswer } from "@/lib/actions/answer.action";
 import { AnswerformSchema } from "@/lib/validation";
 import { usePathname } from "next/navigation";
+import { toast } from "sonner";
 
 interface Props {
   question: string;
@@ -40,7 +36,10 @@ const Editor = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full animate-pulse rounded-md bg-light-700 dark:bg-dark-300" style={{ height: 300 }} />
+      <div
+        className="w-full animate-pulse rounded-md bg-light-700 dark:bg-dark-300"
+        style={{ height: 300 }}
+      />
     ),
   },
 );
@@ -70,12 +69,21 @@ const AnswerForm = ({ questionId, authorId }: Props) => {
       setIsSubmitting(true);
 
       try {
-        await createAnswer({
-          content: values.answer,
-          author: JSON.parse(authorId),
-          question: JSON.parse(questionId),
-          path: pathname,
-        });
+        await toast
+          .promise(
+            createAnswer({
+              content: values.answer,
+              author: JSON.parse(authorId),
+              question: JSON.parse(questionId),
+              path: pathname,
+            }),
+            {
+              loading: "Posting your answer...",
+              success: "Answer posted",
+              error: "Failed to post answer. Please try again.",
+            },
+          )
+          .unwrap();
 
         form.reset();
 
